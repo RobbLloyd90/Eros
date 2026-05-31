@@ -1,10 +1,8 @@
 # Marks these commands as tasks, not actual files in your directory
 .PHONY: start lint test push install build clean format
 
-# --- YOUR REQUESTED COMMANDS ---
-
 start:
-	npm start
+	npm run dev
 
 lint:
 	npm run lint
@@ -18,9 +16,6 @@ push:
 	git commit -m "$(m)"
 	git push -u origin main
 
-# --- SUGGESTED COMMANDS ---
-
-# Quickly installs all dependencies (great for when you switch branches)
 install:
 	npm install
 
@@ -28,11 +23,11 @@ install:
 build:
 	npm run build
 
-# Runs prettier to auto-format all your code
+# Runs prettier to auto-format across the entire codebase
 format:
 	npm run format
 
-# The "Nuclear Option" - deletes node_modules and reinstalls from scratch
+# Deletes node_modules and reinstalls from scratch
 clean:
 	rm -rf node_modules package-lock.json
 	npm install

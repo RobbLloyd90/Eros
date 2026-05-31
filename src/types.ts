@@ -1,8 +1,20 @@
+export type RecurringFrequency = 'weekly' | 'fortnightly' | 'monthly_last_friday' | 'monthly_last_day';
+
+export type RecurringProfile = {
+  frequency: RecurringFrequency;
+  fortnightStartWeek?: 1 | 2; // Which week does their fortnightly cycle begin?
+};
+
 export type Entry = {
   id: string;
   name: string;
   tag?: 'fixed' | 'fluid';
   category?: string;
+  
+  // --- NEW: Recurring Engine Fields ---
+  isRecurring?: boolean;
+  recurringProfile?: RecurringProfile;
+
   // Flow Fields (In/Out)
   expected?: number;
   actual?: number;
@@ -56,6 +68,11 @@ export type ModalState = {
   actualPayment: string;
   interestAccrued: string;
   category: string;
+  
+  // --- NEW: Safe Modal States for UI toggles ---
+  isRecurring?: boolean;
+  recurringFreq?: string;
+  fortnightStartWeek?: number;
 };
 
 export type UserProfile = {
@@ -63,7 +80,7 @@ export type UserProfile = {
   name: string;
   pinHash: string;
   theme: ThemeType;
-  fidoCredential?: any | null; // Defined loosely to avoid TS compiler issues with WebAuthn API
+  fidoCredential?: any | null; 
   charts?: ChartConfig[];
   createdAt: string;
 };
@@ -80,19 +97,8 @@ export type FoodModalState = {
   date: string;
 };
 
-// --- CHARTS & DASHBOARD TYPES ---
 export type ChartType = 'pie' | 'bar' | 'line';
-export type ChartSource =
-  | 'food'
-  | 'outflows'
-  | 'inflows'
-  | 'netWorth'
-  | 'inflows_trend'
-  | 'outflows_trend'
-  | 'food_trend'
-  | 'savings_trend'
-  | 'debt_trend'
-  | 'goal_trend';
+export type ChartSource = 'food' | 'outflows' | 'inflows' | 'netWorth' | 'inflows_trend' | 'outflows_trend' | 'food_trend' | 'savings_trend' | 'debt_trend' | 'goal_trend';
 
 export type ChartConfig = { 
   id: string; 
@@ -105,11 +111,11 @@ export type ChartConfig = {
 export type ChartModalState = {
   isOpen: boolean;
   mode: 'add' | 'edit';
-  id: string | null; // <--- ADDED: Required for editing
+  id: string | null; 
   title: string;
   type: ChartType;
   source: ChartSource;
-  targetIds: string[]; // <--- FIXED: Must be a strictly initialized array, not optional
+  targetIds: string[]; 
 };
 
 export type DeleteChartModalState = { 
@@ -118,17 +124,9 @@ export type DeleteChartModalState = {
   chartTitle: string; 
 };
 
-// Visual Payload Types
 export type ChartDataPoint = { label: string; value: number; color: string; percentage?: number };
+export type LineChartDataset = { label: string; data: number[]; color: string; };
+export type LineChartData = { labels: string[]; datasets: LineChartDataset[]; targetValue?: number; };
 
-export type LineChartDataset = { 
-  label: string; 
-  data: number[]; 
-  color: string; 
-};
-
-export type LineChartData = { 
-  labels: string[]; 
-  datasets: LineChartDataset[]; 
-  targetValue?: number; // <--- ADDED: Tells the UI where to draw the dotted goal line
-};
+export type PrivacyMode = 'off' | 'on' | 'blurred';
+export type PrivacySettings = { savings: PrivacyMode; credit: PrivacyMode; };

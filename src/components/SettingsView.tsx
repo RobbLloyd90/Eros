@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Fingerprint, LogOut, Trash2, ShieldCheck, ShieldAlert, Palette } from 'lucide-react';
+import { Fingerprint, LogOut, Trash2, ShieldCheck, ShieldAlert, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import type { ThemeType } from '../types';
+import type { ThemeType, PrivacyMode, PrivacySettings } from '../types';
 
 interface SettingsViewProps {
   theme: ThemeType;
   tStyle: any;
   isLight: boolean;
   onThemeSelect: (newTheme: ThemeType) => void;
+  // NEW: Privacy Props
+  privacy: PrivacySettings;
+  setPrivacy: (p: PrivacySettings) => void;
 }
 
 const AVAILABLE_THEMES: { id: ThemeType; label: string }[] = [
@@ -20,7 +23,7 @@ const AVAILABLE_THEMES: { id: ThemeType; label: string }[] = [
   { id: 'softtech', label: 'SOFT INDUSTRIAL' }
 ];
 
-export const SettingsView: React.FC<SettingsViewProps> = ({ theme, tStyle, isLight, onThemeSelect }) => {
+export const SettingsView: React.FC<SettingsViewProps> = ({ theme, tStyle, isLight, onThemeSelect, privacy, setPrivacy }) => {
   const { currentUser, logout, deleteAccount, enrollBiometrics, removeBiometrics } = useAuth();
   const [fidoStatus, setFidoStatus] = useState<string>('');
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -42,6 +45,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ theme, tStyle, isLig
     gap: '12px',
     backgroundColor: isLight ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.4)'
   };
+  
   const labelStyle = {
     fontSize: '10px',
     color: tStyle.colors.secondary,
@@ -49,6 +53,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ theme, tStyle, isLig
     fontWeight: 700,
     fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit'
   };
+  
   const buttonStyle = {
     backgroundColor: tStyle.colors.pos,
     color: theme.includes('nothing') ? '#000' : '#fff',
@@ -66,6 +71,18 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ theme, tStyle, isLig
     gap: '8px'
   };
 
+  const selectStyle = {
+    backgroundColor: tStyle.colors.metricBg,
+    color: tStyle.colors.primary,
+    border: isLight ? `1px solid rgba(0,0,0,0.1)` : `1px solid rgba(255,255,255,0.1)`,
+    padding: '12px',
+    borderRadius: '8px',
+    fontSize: '12px',
+    outline: 'none',
+    width: '100%',
+    fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit',
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -81,31 +98,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ theme, tStyle, isLig
       }}
     >
       {/* USER PROFILE DECK */}
-      <div
-        style={{
-          fontSize: '11px',
-          color: tStyle.colors.secondary,
-          letterSpacing: '2px',
-          fontWeight: 'bold',
-          marginTop: '8px',
-          borderBottom: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.1)',
-          paddingBottom: '6px',
-          fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit'
-        }}
-      >
+      <div style={{ fontSize: '11px', color: tStyle.colors.secondary, letterSpacing: '2px', fontWeight: 'bold', marginTop: '8px', borderBottom: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.1)', paddingBottom: '6px', fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit' }}>
         USER PROFILE
       </div>
       <div style={boxStyle}>
         <div>
           <label style={labelStyle as any}>DESIGNATION</label>
-          <div
-            style={{
-              fontSize: '18px',
-              fontWeight: 'bold',
-              color: tStyle.colors.primary,
-              fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit'
-            }}
-          >
+          <div style={{ fontSize: '18px', fontWeight: 'bold', color: tStyle.colors.primary, fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit' }}>
             {currentUser.name.toUpperCase()}
           </div>
         </div>
@@ -117,37 +116,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ theme, tStyle, isLig
         </div>
 
         <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-          <button
-            onClick={logout}
-            style={{
-              ...buttonStyle,
-              flex: 1,
-              backgroundColor: tStyle.colors.metricBg,
-              color: tStyle.colors.primary,
-              border: `1px solid ${tStyle.colors.secondary}33`
-            }}
-          >
+          <button onClick={logout} style={{ ...buttonStyle, flex: 1, backgroundColor: tStyle.colors.metricBg, color: tStyle.colors.primary, border: `1px solid ${tStyle.colors.secondary}33` }}>
             <LogOut size={14} /> LOGOUT
           </button>
 
           {!confirmDelete ? (
-            <button
-              onClick={() => setConfirmDelete(true)}
-              style={{
-                ...buttonStyle,
-                flex: 1,
-                backgroundColor: 'transparent',
-                border: `1px dashed ${tStyle.colors.neg}`,
-                color: tStyle.colors.neg
-              }}
-            >
+            <button onClick={() => setConfirmDelete(true)} style={{ ...buttonStyle, flex: 1, backgroundColor: 'transparent', border: `1px dashed ${tStyle.colors.neg}`, color: tStyle.colors.neg }}>
               <Trash2 size={14} /> PURGE ACCOUNT
             </button>
           ) : (
-            <button
-              onClick={() => deleteAccount(currentUser.id)}
-              style={{ ...buttonStyle, flex: 1, backgroundColor: tStyle.colors.neg, color: '#fff' }}
-            >
+            <button onClick={() => deleteAccount(currentUser.id)} style={{ ...buttonStyle, flex: 1, backgroundColor: tStyle.colors.neg, color: '#fff' }}>
               CONFIRM DELETION
             </button>
           )}
@@ -160,18 +138,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ theme, tStyle, isLig
       </div>
 
       {/* THEMES MANAGEMENT PLUG */}
-      <div
-        style={{
-          fontSize: '11px',
-          color: tStyle.colors.secondary,
-          letterSpacing: '2px',
-          fontWeight: 'bold',
-          marginTop: '16px',
-          borderBottom: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.1)',
-          paddingBottom: '6px',
-          fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit'
-        }}
-      >
+      <div style={{ fontSize: '11px', color: tStyle.colors.secondary, letterSpacing: '2px', fontWeight: 'bold', marginTop: '16px', borderBottom: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.1)', paddingBottom: '6px', fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit' }}>
         VISUAL CORE THEME
       </div>
       <div style={boxStyle}>
@@ -203,19 +170,32 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ theme, tStyle, isLig
         </div>
       </div>
 
+      {/* NEW: DASHBOARD PRIVACY PLUG */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', color: tStyle.colors.secondary, letterSpacing: '2px', fontWeight: 'bold', marginTop: '16px', borderBottom: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.1)', paddingBottom: '6px', fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit' }}>
+        <EyeOff size={14} /> DASHBOARD PRIVACY
+      </div>
+      <div style={boxStyle}>
+        <div>
+          <label style={{ ...labelStyle as any, display: 'block', marginBottom: '6px' }}>SAVINGS METRIC VISIBILITY</label>
+          <select style={selectStyle} value={privacy.savings} onChange={(e) => setPrivacy({...privacy, savings: e.target.value as PrivacyMode})}>
+            <option value="on">Visible (Always On)</option>
+            <option value="blurred">Blurred (Hold to Reveal)</option>
+            <option value="off">Hidden (Completely Off)</option>
+          </select>
+        </div>
+
+        <div>
+          <label style={{ ...labelStyle as any, display: 'block', marginBottom: '6px' }}>CREDIT METRIC VISIBILITY</label>
+          <select style={selectStyle} value={privacy.credit} onChange={(e) => setPrivacy({...privacy, credit: e.target.value as PrivacyMode})}>
+            <option value="on">Visible (Always On)</option>
+            <option value="blurred">Blurred (Hold to Reveal)</option>
+            <option value="off">Hidden (Completely Off)</option>
+          </select>
+        </div>
+      </div>
+
       {/* SECURE BIOMETRICS LINK */}
-      <div
-        style={{
-          fontSize: '11px',
-          color: tStyle.colors.secondary,
-          letterSpacing: '2px',
-          fontWeight: 'bold',
-          marginTop: '16px',
-          borderBottom: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.1)',
-          paddingBottom: '6px',
-          fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit'
-        }}
-      >
+      <div style={{ fontSize: '11px', color: tStyle.colors.secondary, letterSpacing: '2px', fontWeight: 'bold', marginTop: '16px', borderBottom: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.1)', paddingBottom: '6px', fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit' }}>
         SIGN-IN OPTIONS (FIDO2)
       </div>
       <div style={boxStyle}>
@@ -226,38 +206,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ theme, tStyle, isLig
             <ShieldAlert size={24} color={tStyle.colors.secondary} />
           )}
           <div>
-            <div
-              style={{
-                fontSize: '14px',
-                fontWeight: 'bold',
-                color: tStyle.colors.primary,
-                fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit'
-              }}
-            >
+            <div style={{ fontSize: '14px', fontWeight: 'bold', color: tStyle.colors.primary, fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit' }}>
               BIOMETRIC AUTHENTICATION
             </div>
-            <div
-              style={{
-                fontSize: '10px',
-                color: tStyle.colors.secondary,
-                fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit'
-              }}
-            >
+            <div style={{ fontSize: '10px', color: tStyle.colors.secondary, fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit' }}>
               {currentUser.fidoCredential ? 'ACTIVE AND SECURED' : 'NOT CONFIGURED'}
             </div>
           </div>
         </div>
 
         {currentUser.fidoCredential ? (
-          <button
-            onClick={removeBiometrics}
-            style={{
-              ...buttonStyle,
-              backgroundColor: 'transparent',
-              border: `1px dashed ${tStyle.colors.neg}`,
-              color: tStyle.colors.neg
-            }}
-          >
+          <button onClick={removeBiometrics} style={{ ...buttonStyle, backgroundColor: 'transparent', border: `1px dashed ${tStyle.colors.neg}`, color: tStyle.colors.neg }}>
             REMOVE BIOMETRICS
           </button>
         ) : (
@@ -266,15 +225,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ theme, tStyle, isLig
           </button>
         )}
         {fidoStatus && (
-          <div
-            style={{
-              fontSize: '10px',
-              color: tStyle.colors.pos,
-              textAlign: 'center',
-              marginTop: '4px',
-              fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit'
-            }}
-          >
+          <div style={{ fontSize: '10px', color: tStyle.colors.pos, textAlign: 'center', marginTop: '4px', fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit' }}>
             {fidoStatus}
           </div>
         )}

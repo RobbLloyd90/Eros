@@ -13,6 +13,7 @@ interface ViewRouterProps {
   charts: any; activeMonthKey: string; activeData: any; activeGoals: any; activeFood: any;
   setView: any; setChartModal: any; setDeleteChartModal: any; openEditFood: any; handleRemoveFood: any;
   openEditEntry: any; handleRemoveEntry: any; openEditGoal: any;
+  privacySettings: any; setPrivacySettings: any;
 }
 
 export const ViewRouter: React.FC<ViewRouterProps> = (props) => {
@@ -25,7 +26,9 @@ export const ViewRouter: React.FC<ViewRouterProps> = (props) => {
         theme={props.theme}
         tStyle={props.tStyle}
         isLight={props.isLight}
-        onThemeSelect={props.handleThemeChange} />
+        onThemeSelect={props.handleThemeChange}
+        privacy={props.privacySettings}
+        setPrivacy={props.setPrivacySettings} />
         }
         
         {
@@ -38,6 +41,8 @@ export const ViewRouter: React.FC<ViewRouterProps> = (props) => {
         currentYear={props.currentYear}
         currentMonth={props.currentMonth}
         userCharts={props.charts}
+        savingsPrivacy={props.privacySettings.savings}
+        creditPrivacy={props.privacySettings.credit}
         onNavigateToCurrentMonth={() => { props.setCurrentYear(2026); props.setCurrentMonth(5); props.setView('month'); }}
         onNavigateToFood={() => { props.setCurrentYear(2026); props.setCurrentMonth(5); props.setView('food'); }}
         onNavigateToYear={() => props.setView('year')}

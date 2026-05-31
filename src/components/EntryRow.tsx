@@ -119,7 +119,7 @@ export const EntryRow: React.FC<EntryRowProps> = ({ bladeId, entry, theme, tStyl
         >
           <Pencil size={15} color={tStyle.colors.secondary} />
         </button>
-        <button style={{ background: 'none', border: 'none', cursor: 'pointer' }} onClick={() => onRemove(bladeId, id)}>
+        <button style={{ background: 'none', border: 'none', cursor: 'pointer' }} onClick={() => onRemove(bladeId, entry.id)}>
           <X size={18} color={tStyle.colors.neg} />
         </button>
       </div>

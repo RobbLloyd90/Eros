@@ -1,6 +1,7 @@
 import React from 'react';
 import { Settings, Plus, ChevronLeft, Home, ChevronUp, LucideChevronUpCircle, LucideAArrowUp } from 'lucide-react';
 import type { ThemeType } from '../types';
+import { MONTH_NAMES } from '../config';
 
 interface HeaderProps {
   theme: ThemeType;
@@ -13,6 +14,7 @@ interface HeaderProps {
   onBackToYear: () => void;
   onNavigateToSettings: () => void;
   openAddModal: () => void;
+  currentMargin?: number;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -25,14 +27,19 @@ export const Header: React.FC<HeaderProps> = ({
   onBackToDashboard,
   onBackToYear,
   onNavigateToSettings,
-  openAddModal
-}) => {
-  const monthNames = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+  openAddModal,
+  currentMargin
 
-  let displayTitle = 'Eros Budget Tracking';
-  if (currentView === 'year') displayTitle = `CALENDAR YEAR [${currentYear}]`;
-  if (currentView === 'month') displayTitle = `MONTH [${monthNames[currentMonth - 1]} ${currentYear}]`;
-  if (currentView === 'food') displayTitle = `FOOD BUDGET [${monthNames[currentMonth - 1]} ${currentYear}]`;
+}) => {
+
+  const marginString = `${currentMargin >= 0 ? '+' : '-'}£${Math.abs(currentMargin || 0).toFixed(2)}`;
+  const currentMonthName = MONTH_NAMES[currentMonth - 1].toUpperCase();
+
+  let displayTitle = 'Dashboard';
+
+  if (currentView === 'year') displayTitle = `CALENDAR YEAR`;
+  if (currentView === 'month') displayTitle = `MONTH`;
+  if (currentView === 'food') displayTitle = `FOOD BUDGET`;
   if (currentView === 'settings') displayTitle = 'SYSTEM SETTINGS';
 
   return (
@@ -76,7 +83,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={onNavigateToSettings}
               style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: 0 }}
             >
-              <Settings size={18} color={tStyle.colors.secondary} />
+              <Settings size={24} color={tStyle.colors.secondary} />
             </button>
           )}
 
@@ -120,17 +127,17 @@ export const Header: React.FC<HeaderProps> = ({
               fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit'
             }}
           >
-            OPERATIONAL MARGIN
+            Budget Remaing [{currentMonthName}]
           </div>
           <div
             style={{
               fontSize: '22px',
               fontWeight: 'bold',
               ...tStyle.value,
-              color: isLight ? tStyle.colors.neg : tStyle.value.color
+              color: currentMargin >=0? tStyle.colors.pos : tStyle.value.neg
             }}
           >
-            -£109.10
+            {marginString}
           </div>
         </div>
         <div style={{ textAlign: 'right' }}>
@@ -144,17 +151,6 @@ export const Header: React.FC<HeaderProps> = ({
               fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit'
             }}
           >
-            LIQUID POOL
-          </div>
-          <div
-            style={{
-              fontSize: '22px',
-              fontWeight: 'bold',
-              ...tStyle.value,
-              color: isLight ? tStyle.colors.neg : tStyle.value.color
-            }}
-          >
-            -£59.57
           </div>
         </div>
       </div>

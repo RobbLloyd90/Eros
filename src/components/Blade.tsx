@@ -95,9 +95,9 @@ export const Blade: React.FC<BladeProps> = ({
               fontWeight: 700
             }}
           >
-            £{totalActual.toFixed(2)}
           </span>
         )}
+        £{totalActual.toFixed(2)}
       </div>
 
       <motion.div

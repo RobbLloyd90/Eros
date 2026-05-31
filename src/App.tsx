@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import type { ThemeType, ModalState, FoodModalState, ChartModalState, ChartConfig, Entry, Goal, FoodEntry } from './types';
+import type { ThemeType, ModalState, FoodModalState, ChartModalState, ChartConfig, Entry, Goal, FoodEntry, PrivacySettings } from './types';
 import { getThemeStyles } from './theme';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { useLedgerData } from './hooks/useLedgerData';
@@ -24,6 +24,7 @@ const MainApp = () => {
   const [foodModal, setFoodModal] = useState<FoodModalState>({ isOpen: false, mode: 'add', id: null, category: '', store: '', item: '', method: 'Debit/Cash', price: '', date: new Date().toISOString().split('T')[0] });
   const [chartModal, setChartModal] = useState<ChartModalState>({ isOpen: false, mode: 'add', id: null, title: '', type: 'pie', source: 'outflows', targetIds: [] });
   const [deleteChartModal, setDeleteChartModal] = useState<{ isOpen: boolean; chartId: string; chartTitle: string }>({ isOpen: false, chartId: '', chartTitle: '' });
+  const [privacySettings, setPrivacySettings] = useState<PrivacySettings>({ savings: 'blurred', credit: 'blurred' });
 
   useEffect(() => {
     if (currentUser) {
@@ -33,7 +34,7 @@ const MainApp = () => {
   }, [currentUser]);
 
   const handleThemeChange = (newTheme: ThemeType) => { setTheme(newTheme); updateTheme(newTheme); };
-
+5
   const handleOpenAddModal = () => {
     if (view === 'food') { setFoodModal(prev => (
       {
@@ -147,6 +148,14 @@ const MainApp = () => {
   const tStyle = getThemeStyles(theme);
   const isLight = theme === 'aero_g3';
 
+    const inflowTotal = (activeData.inflows || []).reduce((sum, e) => sum + (e.actual || 0), 0);
+    const outflowTotal = (activeData.outflows || []).reduce((sum, e) => sum + (e.actual || 0), 0);
+    const savingsContribution = (activeData.savings || []).reduce((sum, s) => sum + (s.contribution || 0), 0);
+    const debtRepayments = (activeData.debt || []).reduce((sum, d) => sum + (d.actualPayment || 0), 0);
+    const currentMargin = inflowTotal - outflowTotal - savingsContribution - debtRepayments;
+
+
+
   return (
     <>
       <GlobalStyles />
@@ -180,7 +189,8 @@ const MainApp = () => {
           onBackToDashboard={() => setView('dashboard')}
           onBackToYear={() => setView('year')}
           onNavigateToSettings={() => setView('settings')}
-          openAddModal={handleOpenAddModal} />
+          openAddModal={handleOpenAddModal}
+          currentMargin={currentMargin} />
 
           <ViewRouter
           view={view}
@@ -205,7 +215,9 @@ const MainApp = () => {
           handleRemoveFood={handleRemoveFood}
           openEditEntry={openEditEntry}
           handleRemoveEntry={handleRemoveEntry}
-          openEditGoal={openEditGoal} />
+          openEditGoal={openEditGoal}
+          privacySettings={privacySettings}
+          setPrivacySettings={setPrivacySettings} />
         </div>
 
         <AppModals
