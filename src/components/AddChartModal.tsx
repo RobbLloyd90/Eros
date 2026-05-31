@@ -113,7 +113,6 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
                   {modal.type === 'line' ? (
                     <>
                       <option value="netWorth">Long-Term Tracking (Savings vs Debt)</option>
-                      <option value="goal_trend">Specific Savings Goal(s)</option>
                       <option value="savings_trend">Total Savings Over Time</option>
                       <option value="debt_trend">Total Debt Over Time</option>
                       <option value="inflows_trend">Total Incoming Over Time</option>

@@ -37,42 +37,42 @@ export const getLineChartData = (chart: ChartConfig, ledger: GlobalLedger, theme
   let targetValue: number | undefined = undefined;
   let combinedLinkedSavings = new Set<string>();
 
-  // --- BULLETPROOF GOAL PROGRESS ENGINE ---
-  if (chart.source === 'goal_trend') {
-    let combinedTarget = 0;
-    let earliestMonthIndex = monthKeys.length;
+  // // --- BULLETPROOF GOAL PROGRESS ENGINE ---
+  // if (chart.source === 'goal_trend') {
+  //   let combinedTarget = 0;
+  //   let earliestMonthIndex = monthKeys.length;
     
-    // SAFETY: Fallback to empty array if undefined
-    const targets = chart.targetIds || [];
+  //   // SAFETY: Fallback to empty array if undefined
+  //   const targets = chart.targetIds || [];
 
-    targets.forEach(goalId => {
-      monthKeys.forEach((key, index) => {
-        // SAFETY: Fallback for goals array
-        if ((ledger[key].goals || []).some(g => g.id === goalId)) {
-          if (index < earliestMonthIndex) earliestMonthIndex = index;
-        }
-      });
-      for (let i = monthKeys.length - 1; i >= 0; i--) {
-        const g = (ledger[monthKeys[i]].goals || []).find(x => x.id === goalId);
-        if (g) {
-          combinedTarget += Number(g.targetAmount || 0);
-          // CRITICAL SAFETY: linkedSavings might be undefined on old goals
-          (g.linkedSavings || []).forEach(s => combinedLinkedSavings.add(s));
-          break;
-        }
-      }
-    });
+  //   targets.forEach(goalId => {
+  //     monthKeys.forEach((key, index) => {
+  //       // SAFETY: Fallback for goals array
+  //       if ((ledger[key].goals || []).some(g => g.id === goalId)) {
+  //         if (index < earliestMonthIndex) earliestMonthIndex = index;
+  //       }
+  //     });
+  //     for (let i = monthKeys.length - 1; i >= 0; i--) {
+  //       const g = (ledger[monthKeys[i]].goals || []).find(x => x.id === goalId);
+  //       if (g) {
+  //         combinedTarget += Number(g.targetAmount || 0);
+  //         // CRITICAL SAFETY: linkedSavings might be undefined on old goals
+  //         (g.linkedSavings || []).forEach(s => combinedLinkedSavings.add(s));
+  //         break;
+  //       }
+  //     }
+  //   });
     
-    targetValue = combinedTarget;
+  //   targetValue = combinedTarget;
     
-    // Truncate timeline to only show from when the earliest goal was created
-    if (earliestMonthIndex < monthKeys.length) {
-      monthKeys = monthKeys.slice(earliestMonthIndex);
-    } else {
-      // If no valid history was found, return an empty timeline
-      monthKeys = [];
-    }
-  }
+  //   // Truncate timeline to only show from when the earliest goal was created
+  //   if (earliestMonthIndex < monthKeys.length) {
+  //     monthKeys = monthKeys.slice(earliestMonthIndex);
+  //   } else {
+  //     // If no valid history was found, return an empty timeline
+  //     monthKeys = [];
+  //   }
+  // }
 
   const labels: string[] = [];
   const data1: number[] = []; const data2: number[] = []; const data3: number[] = [];

@@ -35,18 +35,96 @@ const MainApp = () => {
   const handleThemeChange = (newTheme: ThemeType) => { setTheme(newTheme); updateTheme(newTheme); };
 
   const handleOpenAddModal = () => {
-    if (view === 'food') { setFoodModal(prev => ({ ...prev, isOpen: true, mode: 'add', id: null, category: '', store: '', item: '', method: 'Debit/Cash', price: '', date: new Date().toISOString().split('T')[0] })); } 
-    else { setModal(prev => ({ ...prev, isOpen: true, mode: 'add', id: null, name: '', expected: '', actual: '', targetAmount: '', targetDate: '', linkedSavings: [], interestRate: '', contribution: '', currentBalance: '', interestEarned: '', minimumPayment: '', actualPayment: '', interestAccrued: '', category: '' })); }
+    if (view === 'food') { setFoodModal(prev => (
+      {
+        ...prev,
+        isOpen: true,
+        mode: 'add',
+        id: null,
+        category: '',
+        store: '',
+        item: '',
+        method: 'Debit/Cash',
+        price: '',
+        date: new Date().toISOString().split('T')[0]
+      }));
+    } 
+    else { setModal(prev => (
+      {
+        ...prev,
+        isOpen: true,
+        mode: 'add',
+        id: null,
+        name: '',
+        expected: '',
+        actual: '',
+        targetAmount: '',
+        targetDate: '',
+        linkedSavings: [],
+        interestRate: '',
+        contribution: '',
+        currentBalance: '',
+        interestEarned: '',
+        minimumPayment: '',
+        actualPayment: '',
+        interestAccrued: '',
+        category: ''
+      }));
+    }
   };
 
-  const openEditEntry = (bladeId: string, entry: Entry) => setModal(prev => ({ ...prev, isOpen: true, mode: 'edit', isGoal: false, bladeId, id: entry.id, name: entry.name, expected: entry.expected?.toString() || '', actual: entry.actual?.toString() || '', tag: entry.tag || 'fixed', interestRate: entry.interestRate?.toString() || '', contribution: entry.contribution?.toString() || '', currentBalance: entry.currentBalance?.toString() || '', interestEarned: entry.interestEarned?.toString() || '', minimumPayment: entry.minimumPayment?.toString() || '', actualPayment: entry.actualPayment?.toString() || '', interestAccrued: entry.interestAccrued?.toString() || '', category: entry.category || '' }));
-  const openEditGoal = (goal: Goal) => setModal(prev => ({ ...prev, isOpen: true, mode: 'edit', isGoal: true, bladeId: 'goals', id: goal.id, name: goal.name, targetAmount: goal.targetAmount.toString(), targetDate: goal.targetDate, linkedSavings: goal.linkedSavings }));
-  const openEditFood = (food: FoodEntry) => setFoodModal({ isOpen: true, mode: 'edit', id: food.id, category: food.category, store: food.store, item: food.item, method: food.method, price: food.price.toString(), date: food.date });
+  const openEditEntry = (bladeId: string, entry: Entry) => setModal(prev => (
+    {
+      ...prev,
+      isOpen: true,
+      mode: 'edit',
+      isGoal: false,
+      bladeId,
+      id: entry.id,
+      name: entry.name,
+      expected: entry.expected?.toString() || '',
+      actual: entry.actual?.toString() || '',
+      tag: entry.tag || 'fixed',
+      interestRate: entry.interestRate?.toString() || '',
+      contribution: entry.contribution?.toString() || '',
+      currentBalance: entry.currentBalance?.toString() || '',
+      interestEarned: entry.interestEarned?.toString() || '',
+      minimumPayment: entry.minimumPayment?.toString() || '',
+      actualPayment: entry.actualPayment?.toString() || '',
+      interestAccrued: entry.interestAccrued?.toString() || '',
+      category: entry.category || '' 
+    }));
+
+  const openEditGoal = (goal: Goal) => setModal(prev => (
+    {
+      ...prev,
+      isOpen: true,
+      mode: 'edit',
+      isGoal: true,
+      bladeId: 'goals',
+      id: goal.id,
+      name: goal.name,
+      targetAmount: goal.targetAmount.toString(),
+      targetDate: goal.targetDate,
+      linkedSavings: goal.linkedSavings
+    }));
+
+  const openEditFood = (food: FoodEntry) => setFoodModal(
+    {
+      isOpen: true,
+      mode: 'edit',
+      id: food.id,
+      category: food.category,
+      store: food.store,
+      item: food.item,
+      method: food.method,
+      price: food.price.toString(),
+      date: food.date
+    });
 
   const handleChartSave = () => {
     if (!chartModal.title) return;
     
-    // UPDATED: Now includes targetIds so the specific goal selections are saved securely to the database
     const chartData: ChartConfig = { 
       id: chartModal.mode === 'add' ? Date.now().toString() : chartModal.id!, 
       title: chartModal.title, 
@@ -72,17 +150,82 @@ const MainApp = () => {
   return (
     <>
       <GlobalStyles />
-      <div style={{ position: 'relative', height: '100vh', width: '100vw', overflow: 'hidden', display: 'flex', flexDirection: 'column', ...tStyle.screen }}>
+      <div style={
+        {
+          position: 'relative',
+          height: '100vh',
+          width: '100vw',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          ...tStyle.screen
+        }}>
         <LiquidBackground theme={theme} />
-        <div style={{ position: 'relative', zIndex: 10, display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <div style={
+          {
+            position: 'relative',
+            zIndex: 10,
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100%' }}>
           
-          <Header theme={theme} setTheme={handleThemeChange} isLight={isLight} tStyle={tStyle} currentView={view as any} currentYear={currentYear} currentMonth={currentMonth} onBackToDashboard={() => setView('dashboard')} onBackToYear={() => setView('year')} onNavigateToSettings={() => setView('settings')} openAddModal={handleOpenAddModal} />
+          <Header
+          theme={theme}
+          setTheme={handleThemeChange}
+          isLight={isLight}
+          tStyle={tStyle}
+          currentView={view as any}
+          currentYear={currentYear}
+          currentMonth={currentMonth}
+          onBackToDashboard={() => setView('dashboard')}
+          onBackToYear={() => setView('year')}
+          onNavigateToSettings={() => setView('settings')}
+          openAddModal={handleOpenAddModal} />
 
-          <ViewRouter view={view} setView={setView} theme={theme} tStyle={tStyle} isLight={isLight} handleThemeChange={handleThemeChange} ledger={ledger} currentYear={currentYear} currentMonth={currentMonth} setCurrentMonth={setCurrentMonth} setCurrentYear={setCurrentYear} charts={charts} activeMonthKey={activeMonthKey} activeData={activeData} activeGoals={activeGoals} activeFood={activeFood} setChartModal={setChartModal} setDeleteChartModal={setDeleteChartModal} openEditFood={openEditFood} handleRemoveFood={handleRemoveFood} openEditEntry={openEditEntry} handleRemoveEntry={handleRemoveEntry} openEditGoal={openEditGoal} />
+          <ViewRouter
+          view={view}
+          setView={setView}
+          theme={theme}
+          tStyle={tStyle}
+          isLight={isLight}
+          handleThemeChange={handleThemeChange}
+          ledger={ledger}
+          currentYear={currentYear}
+          currentMonth={currentMonth}
+          setCurrentMonth={setCurrentMonth}
+          setCurrentYear={setCurrentYear}
+          charts={charts}
+          activeMonthKey={activeMonthKey}
+          activeData={activeData}
+          activeGoals={activeGoals}
+          activeFood={activeFood}
+          setChartModal={setChartModal}
+          setDeleteChartModal={setDeleteChartModal}
+          openEditFood={openEditFood}
+          handleRemoveFood={handleRemoveFood}
+          openEditEntry={openEditEntry}
+          handleRemoveEntry={handleRemoveEntry}
+          openEditGoal={openEditGoal} />
         </div>
 
-        {/* UPDATED: Passed activeGoals into the AppModals so the Chart Modal can render the checklist */}
-        <AppModals modal={modal} setModal={setModal} foodModal={foodModal} setFoodModal={setFoodModal} chartModal={chartModal} setChartModal={setChartModal} deleteChartModal={deleteChartModal} setDeleteChartModal={setDeleteChartModal} theme={theme} tStyle={tStyle} isLight={isLight} activeData={activeData} activeGoals={activeGoals} handleModalSave={() => handleModalSave(modal)} handleFoodSave={() => handleFoodSave(foodModal)} handleChartSave={handleChartSave} handleConfirmChartDelete={handleConfirmChartDelete} />
+        <AppModals
+        modal={modal}
+        setModal={setModal}
+        foodModal={foodModal}
+        setFoodModal={setFoodModal}
+        chartModal={chartModal}
+        setChartModal={setChartModal}
+        deleteChartModal={deleteChartModal}
+        setDeleteChartModal={setDeleteChartModal}
+        theme={theme}
+        tStyle={tStyle}
+        isLight={isLight}
+        activeData={activeData}
+        activeGoals={activeGoals}
+        handleModalSave={() => handleModalSave(modal)}
+        handleFoodSave={() => handleFoodSave(foodModal)}
+        handleChartSave={handleChartSave}
+        handleConfirmChartDelete={handleConfirmChartDelete} />
       </div>
     </>
   );
