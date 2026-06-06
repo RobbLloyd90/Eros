@@ -86,13 +86,19 @@ export const Dashboard: React.FC<DashboardProps> = ({
   let debtTotal = 0;
 
   if (activeMonthData) {
-    foodTotal = (activeMonthData.food || []).reduce((sum, f) => sum + f.price, 0);
-    inflowTotal = (activeMonthData.data.inflows || []).reduce((sum, e) => sum + (e.actual || 0), 0);
-    outflowTotal = (activeMonthData.data.outflows || []).reduce((sum, e) => sum + (e.actual || 0), 0);
-    savingsTotal = (activeMonthData.data.savings || []).reduce((sum, s) => sum + (s.contribution || 0), 0);
-    debtTotal = (activeMonthData.data.debt || []).reduce((sum, d) => sum + (d.actualPayment || 0), 0);
-  }
-
+  // 1. Safely calculate food total, enforcing Number types
+    foodTotal = (activeMonthData.food || []).reduce((sum, f) => sum + (Number(f.price) || 0), 0);
+    
+    // 2. Use optional chaining (?.) to prevent crashes if 'data' is missing
+    inflowTotal = (activeMonthData.data?.inflows || []).reduce((sum, e) => sum + (Number(e.actual) || 0), 0);
+    
+    // 3. CRITICAL FIX: Add the Food Total to the Outgoings metric so the Dashboard is accurate!
+    const standardOutflows = (activeMonthData.data?.outflows || []).reduce((sum, e) => sum + (Number(e.actual) || 0), 0);
+    outflowTotal = standardOutflows + foodTotal; 
+    
+    savingsTotal = (activeMonthData.data?.savings || []).reduce((sum, s) => sum + (Number(s.contribution) || 0), 0);
+    debtTotal = (activeMonthData.data?.debt || []).reduce((sum, d) => sum + (Number(d.actualPayment) || 0), 0);
+  } 
   const containerStyle = {
     ...tStyle.bladeContainer({ color: tStyle.colors.pos }),
     display: 'flex', flexDirection: 'column' as const, justifyContent: 'space-between', padding: '16px',
@@ -116,7 +122,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <Calendar size={24} color={tStyle.colors.pos} style={{ opacity: 0.8 }} />
             <div style={{ fontSize: '20px', fontWeight: 'bold', color: tStyle.colors.primary, fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit' }}>
-              {MONTH_NAMES[currentMonth - 1].slice(0,3)} '{String(currentYear).slice(-2)}
+              {MONTH_NAMES[new Date().getMonth()].slice(0,3)} '{String(currentYear).slice(-2)}
             </div>
           </div>
           

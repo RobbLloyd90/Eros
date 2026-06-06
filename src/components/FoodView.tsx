@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Pencil, X, MapPin, CreditCard, Banknote } from 'lucide-react';
 import type { ThemeType, FoodEntry } from '../types';
@@ -10,21 +10,82 @@ interface FoodViewProps {
   isLight: boolean;
   onEdit: (entry: FoodEntry) => void;
   onRemove: (id: string) => void;
+  // --- NEW PROPS REQUIRED FOR SWIPE PAGINATION ---
+  currentMonth: number;
+  currentYear: number;
+  setCurrentMonth: (m: number) => void;
+  setCurrentYear: (y: number) => void;
+  activeMonthKey: string;
 }
 
-export const FoodView: React.FC<FoodViewProps> = ({ foodEntries, theme, tStyle, isLight, onEdit, onRemove }) => {
+export const FoodView: React.FC<FoodViewProps> = ({ 
+  foodEntries, 
+  theme, 
+  tStyle, 
+  isLight, 
+  onEdit, 
+  onRemove,
+  currentMonth,
+  currentYear,
+  setCurrentMonth,
+  setCurrentYear,
+  activeMonthKey
+}) => {
+  const [swipeDirection, setSwipeDirection] = useState(0);
+
+  const paginateMonth = (newDirection: number) => {
+    setSwipeDirection(newDirection);
+    let nextMonth = currentMonth + newDirection;
+    let nextYear = currentYear;
+    
+    if (nextMonth > 12) { 
+      nextMonth = 1; 
+      nextYear += 1; 
+    } else if (nextMonth < 1) { 
+      nextMonth = 12; 
+      nextYear -= 1; 
+    }
+    
+    setCurrentMonth(nextMonth);
+    setCurrentYear(nextYear);
+  };
+
+  const swipeConfidenceThreshold = 10000;
+  const swipePower = (offset: number, velocity: number) => Math.abs(offset) * velocity;
+  
+  const swipeVariants = { 
+    enter: (d: number) => ({ x: d > 0 ? 300 : -300, opacity: 0 }), 
+    center: { zIndex: 1, x: 0, opacity: 1 }, 
+    exit: (d: number) => ({ zIndex: 0, x: d < 0 ? 300 : -300, opacity: 0 }) 
+  };
+
   return (
     <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
+      key={activeMonthKey}
+      custom={swipeDirection}
+      variants={swipeVariants}
+      initial="enter"
+      animate="center"
+      exit="exit"
+      transition={{ x: { type: 'spring', stiffness: 300, damping: 30 }, opacity: { duration: 0.2 } }}
+      drag="x"
+      dragConstraints={{ left: 0, right: 0 }}
+      dragElastic={1}
+      onDragEnd={(e, { offset, velocity }) => {
+        const swipe = swipePower(offset.x, velocity.x);
+        if (swipe < -swipeConfidenceThreshold) paginateMonth(1);
+        else if (swipe > swipeConfidenceThreshold) paginateMonth(-1);
+      }}
       style={{
         padding: '0 16px 20px 16px',
         display: 'flex',
         flexDirection: 'column',
         gap: '12px',
         height: '100%',
-        overflowY: 'auto'
+        overflowY: 'auto',
+        position: 'absolute',
+        top: 0, left: 0, right: 0, bottom: 0,
+        touchAction: 'pan-y' // Crucial: Prevents vertical scrolling from triggering horizontal swipes
       }}
     >
       {foodEntries.length === 0 ? (

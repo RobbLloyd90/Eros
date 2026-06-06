@@ -33,7 +33,7 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
 
   const marginString = `${currentMargin >= 0 ? '+' : '-'}£${Math.abs(currentMargin || 0).toFixed(2)}`;
-  const currentMonthName = MONTH_NAMES[currentMonth - 1].toUpperCase();
+  const currentMonthName = MONTH_NAMES[currentMonth - 1]?.toUpperCase() || '';
 
   let displayTitle = 'Dashboard';
 

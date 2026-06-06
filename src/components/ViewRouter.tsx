@@ -43,8 +43,8 @@ export const ViewRouter: React.FC<ViewRouterProps> = (props) => {
         userCharts={props.charts}
         savingsPrivacy={props.privacySettings.savings}
         creditPrivacy={props.privacySettings.credit}
-        onNavigateToCurrentMonth={() => { props.setCurrentYear(2026); props.setCurrentMonth(5); props.setView('month'); }}
-        onNavigateToFood={() => { props.setCurrentYear(2026); props.setCurrentMonth(5); props.setView('food'); }}
+        onNavigateToCurrentMonth={() => props.setView('month')}
+        onNavigateToFood={() => props.setView('food')}
         onNavigateToYear={() => props.setView('year')}
         onAddChart={() => props.setChartModal({ isOpen: true, mode: 'add', id: null, title: '', type: 'bar', source: 'outflows', targetIds: [] })}
         onEditChart={(chart) => props.setChartModal({ isOpen: true, mode: 'edit', id: chart.id, title: chart.title, type: chart.type, source: chart.source, targetIds: chart.targetIds || [] })}
@@ -70,7 +70,12 @@ export const ViewRouter: React.FC<ViewRouterProps> = (props) => {
         tStyle={props.tStyle}
         isLight={props.isLight}
         onEdit={props.openEditFood}
-        onRemove={props.handleRemoveFood} />
+        onRemove={props.handleRemoveFood}
+        currentMonth={props.currentMonth}
+        currentYear={props.currentYear}
+        setCurrentMonth={props.setCurrentMonth}
+        setCurrentYear={props.setCurrentYear}
+        activeMonthKey={props.activeMonthKey} />
         }
         
         {
