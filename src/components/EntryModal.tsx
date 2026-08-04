@@ -222,7 +222,7 @@ export const EntryModal: React.FC<EntryModalProps> = ({
                       checked={!!modal.isRecurring} 
                       onChange={(e) => setModal({ ...modal, isRecurring: e.target.checked, recurringFreq: modal.recurringFreq || 'monthly_last_day', fortnightStartWeek: modal.fortnightStartWeek || 1 })} 
                     />
-                    <span style={{ fontSize: '12px', color: tStyle.colors.primary }}>THIS IS A RECURRING INCOME</span>
+                    <span style={{ fontSize: '12px', color: tStyle.colors.primary }}>RECURRING INCOME</span>
                   </label>
 
                   <AnimatePresence>
@@ -257,6 +257,8 @@ export const EntryModal: React.FC<EntryModalProps> = ({
               )}
               {/* --- END RECURRING UI --- */}
 
+      
+
               {/* SAVINGS UI (Preserved exactly from your file) */}
               {modal.bladeId === 'savings' && !modal.isGoal && (
                 <>
@@ -290,9 +292,19 @@ export const EntryModal: React.FC<EntryModalProps> = ({
                         value={modal.interestEarned}
                         onChange={(e) => setModal({ ...modal, interestEarned: e.target.value })}
                       />
-                    </div>
-                  </div>
-                </>
+                      </div>
+                        </div>
+                        <div style={{ flex: 2, backgroundColor: tStyle.colors.metricBg, height: '50px', display: 'flex', padding: '10px', borderRadius: '8px', border: isLight ? `1px solid rgba(0,0,0,0.1)` : `1px solid rgba(255,255,255,0.1)` }}>
+                          <label style={{ display: 'flex', alignItems: 'center', gap:'8px', cursor: 'pointer', ...labelStyle as any }}>
+                            <input 
+                            type="checkbox" 
+                            checked={!!modal.isRecurring} 
+                            onChange={(e) => setModal({ ...modal, isRecurring: e.target.checked, recurringFreq: modal.recurringFreq || 'monthly_last_day', fortnightStartWeek: modal.fortnightStartWeek || 1 })} 
+                            />
+                            <span style={{ fontSize: '12px', color: tStyle.colors.primary }}>NON-FIXED INTEREST</span>
+                          </label>
+                        </div>
+                        </>
               )}
 
               {/* DEBT UI (Preserved exactly from your file) */}
