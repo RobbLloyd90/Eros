@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { ThemeType, ModalState, FoodModalState, ChartModalState, ChartConfig, Entry, SavingsEntry, DebtEntry, Goal, FoodEntry, PrivacySettings } from './types';
+import type { ThemeType, ModalState, FoodModalState, ChartModalState, ChartConfig, Entry, SavingsEntry, DebtEntry, Goal, FoodEntry, PrivacySettings, DeleteGoalModalState } from './types';
 import { getThemeStyles } from './theme';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { useLedgerData } from './hooks/useLedgerData';
@@ -14,7 +14,7 @@ import { LockScreen } from './components/LockScreen';
 
 const MainApp = () => {
   const { currentUser, updateTheme, updateCharts } = useAuth();
-  const { ledger, currentYear, setCurrentYear, currentMonth, setCurrentMonth, activeMonthKey, activeGoals, activeFood, activeData, handleModalSave, handleFoodSave, handleRemoveEntry, handleRemoveFood } = useLedgerData(currentUser);
+  const { ledger, currentYear, setCurrentYear, currentMonth, setCurrentMonth, activeMonthKey, activeGoals, activeFood, activeData, handleModalSave, handleFoodSave, handleRemoveEntry, handleRemoveFood, handleRemoveGoal, handleRemoveGoalEverywhere } = useLedgerData(currentUser);
 
   const [theme, setTheme] = useState<ThemeType>(currentUser?.theme || 'aero_g3');
   const [view, setView] = useState<AppView>('dashboard');
@@ -25,6 +25,7 @@ const MainApp = () => {
   const [foodModal, setFoodModal] = useState<FoodModalState>({ isOpen: false, mode: 'add', id: null, category: '', store: '', item: '', method: 'Debit/Cash', price: '', date: new Date().toISOString().split('T')[0] });
   const [chartModal, setChartModal] = useState<ChartModalState>({ isOpen: false, mode: 'add', id: null, title: '', type: 'pie', source: 'outflows', targetIds: [] });
   const [deleteChartModal, setDeleteChartModal] = useState<{ isOpen: boolean; chartId: string; chartTitle: string }>({ isOpen: false, chartId: '', chartTitle: '' });
+  const [deleteGoalModal, setDeleteGoalModal] = useState<DeleteGoalModalState>({ isOpen: false, goalId: '', goalName: '' });
   const [privacySettings, setPrivacySettings] = useState<PrivacySettings>({ savings: 'blurred', credit: 'blurred' });
 
   useEffect(() => {
@@ -70,7 +71,11 @@ const MainApp = () => {
         minimumPayment: '',
         actualPayment: '',
         interestAccrued: '',
-        category: ''
+        category: '',
+        isRecurringContribution: false,
+        isFixedInterestRate: false,
+        paymentDate: '',
+        previousPaymentDate: ''
       }));
     }
   };
@@ -96,7 +101,11 @@ const MainApp = () => {
       minimumPayment: e.minimumPayment?.toString() || '',
       actualPayment: e.actualPayment?.toString() || '',
       interestAccrued: e.interestAccrued?.toString() || '',
-      category: e.category || '' 
+      category: e.category || '',
+      isRecurringContribution: e.isRecurringContribution || false,
+      isFixedInterestRate: e.isFixedInterestRate || false,
+      paymentDate: e.paymentDate || '',
+      previousPaymentDate: e.paymentDate || ''
     }));
   };
 
@@ -113,6 +122,10 @@ const MainApp = () => {
       targetDate: goal.targetDate,
       linkedSavings: goal.linkedSavings
     }));
+
+  const openDeleteGoal = (goal: Goal) => setDeleteGoalModal({ isOpen: true, goalId: goal.id, goalName: goal.name });
+  const handleRemoveGoalFromHere = () => handleRemoveGoal(deleteGoalModal.goalId);
+  const handleRemoveGoalEverywhereConfirm = () => handleRemoveGoalEverywhere(deleteGoalModal.goalId);
 
   const openEditFood = (food: FoodEntry) => setFoodModal(
     {
@@ -220,6 +233,7 @@ const MainApp = () => {
             openEditEntry,
             handleRemoveEntry,
             openEditGoal,
+            openDeleteGoal,
             privacySettings,
             setPrivacySettings
           }}>
@@ -236,6 +250,8 @@ const MainApp = () => {
         setChartModal={setChartModal}
         deleteChartModal={deleteChartModal}
         setDeleteChartModal={setDeleteChartModal}
+        deleteGoalModal={deleteGoalModal}
+        setDeleteGoalModal={setDeleteGoalModal}
         theme={theme}
         tStyle={tStyle}
         isLight={isLight}
@@ -244,7 +260,9 @@ const MainApp = () => {
         handleModalSave={() => handleModalSave(modal)}
         handleFoodSave={() => handleFoodSave(foodModal)}
         handleChartSave={handleChartSave}
-        handleConfirmChartDelete={handleConfirmChartDelete} />
+        handleConfirmChartDelete={handleConfirmChartDelete}
+        handleRemoveGoalFromHere={handleRemoveGoalFromHere}
+        handleRemoveGoalEverywhere={handleRemoveGoalEverywhereConfirm} />
       </div>
     </>
   );

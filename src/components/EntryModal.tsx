@@ -127,7 +127,7 @@ export const EntryModal: React.FC<EntryModalProps> = ({
 
         {/* DEBT UI */}
         {modal.bladeId === 'debt' && !modal.isGoal && (
-          <DebtSection modal={modal} setModal={setModal} inputStyle={inputStyle} labelStyle={labelStyle} />
+          <DebtSection modal={modal} setModal={setModal} tStyle={tStyle} inputStyle={inputStyle} labelStyle={labelStyle} />
         )}
 
         {/* STANDARD FLOWS UI */}

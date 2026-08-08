@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pencil, Calendar, Target, Check, TrendingUp } from 'lucide-react';
+import { Pencil, X, Calendar, Target, Check, TrendingUp } from 'lucide-react';
 import type { Goal, SavingsEntry, ThemeType } from '../types';
 import { isNothingTheme, getLabelFontFamily } from '../utils/themeUtils';
 
@@ -11,9 +11,10 @@ interface GoalCardProps {
   tStyle: any;
   isLight: boolean;
   onEdit: (goal: Goal) => void;
+  onRemove: (goal: Goal) => void;
 }
 
-export const GoalCard: React.FC<GoalCardProps> = ({ goal, config, savingsData, theme, tStyle, isLight, onEdit }) => {
+export const GoalCard: React.FC<GoalCardProps> = ({ goal, config, savingsData, theme, tStyle, isLight, onEdit, onRemove }) => {
   const currentlySaved = goal.linkedSavings.reduce((sum, sId) => {
     const s = savingsData.find((s) => s.id === sId);
     if (!s) return sum;
@@ -54,8 +55,11 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, config, savingsData, t
           </div>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
-          <button style={{ background: 'none', border: 'none', cursor: 'pointer' }} onClick={() => onEdit(goal)}>
+          <button type="button" style={{ background: 'none', border: 'none', cursor: 'pointer' }} onClick={() => onEdit(goal)}>
             <Pencil size={16} color={tStyle.colors.secondary} />
+          </button>
+          <button type="button" style={{ background: 'none', border: 'none', cursor: 'pointer' }} onClick={() => onRemove(goal)}>
+            <X size={16} color={tStyle.colors.neg} />
           </button>
         </div>
       </div>

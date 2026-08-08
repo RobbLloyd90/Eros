@@ -19,7 +19,8 @@ export const MonthLedger: React.FC = () => {
     isLight,
     openEditEntry,
     handleRemoveEntry,
-    openEditGoal
+    openEditGoal,
+    openDeleteGoal
   } = useAppState();
   const [activeIndex, setActiveIndex] = useState(0);
   const { swipeDirection, swipeVariants, handleDragEnd } = useMonthPagination(currentMonth, currentYear, setCurrentMonth, setCurrentYear, () => setActiveIndex(0));
@@ -31,7 +32,7 @@ export const MonthLedger: React.FC = () => {
         const topPos = i < activeIndex ? i * TAB_HEIGHT : i === activeIndex ? i * TAB_HEIGHT : `calc(100% - ${(BLADE_CONFIG.length - i) * TAB_HEIGHT}px)`;
         const bHeight = i === activeIndex ? `calc(100% - ${(BLADE_CONFIG.length - 1) * TAB_HEIGHT}px)` : TAB_HEIGHT;
         return (
-          <Blade key={config.id} config={config} index={i} isActive={isActive} topPosition={topPos} bladeHeight={bHeight} onToggle={() => setActiveIndex(isActive && i !== 0 ? 0 : i)} data={activeData} goals={activeGoals} theme={theme} tStyle={tStyle} isLight={isLight} openEditEntry={openEditEntry} handleRemoveEntry={handleRemoveEntry} openEditGoal={openEditGoal} />
+          <Blade key={config.id} config={config} index={i} isActive={isActive} topPosition={topPos} bladeHeight={bHeight} onToggle={() => setActiveIndex(isActive && i !== 0 ? 0 : i)} data={activeData} goals={activeGoals} theme={theme} tStyle={tStyle} isLight={isLight} openEditEntry={openEditEntry} handleRemoveEntry={handleRemoveEntry} openEditGoal={openEditGoal} openDeleteGoal={openDeleteGoal} />
         );
       })}
     </motion.div>

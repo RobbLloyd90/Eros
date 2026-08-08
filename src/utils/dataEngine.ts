@@ -3,6 +3,27 @@ export const getLastDayOfMonth = (year: number, month: number): Date => {
   return new Date(year, month, 0); // Day 0 of the next month is the last day of this month
 };
 
+// Monthly interest for a fixed-rate savings account: balance * (APR / 100) / 12
+export const calculateMonthlySavingsInterest = (currentBalance: number, interestRatePercent: number): number => {
+  return (currentBalance * (interestRatePercent / 100)) / 12;
+};
+
+// Whole number of days between two YYYY-MM-DD dates (used for daily debt interest accrual).
+export const getDaysBetweenDates = (startDate: string, endDate: string): number => {
+  if (!startDate || !endDate) return 0;
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  return Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+};
+
+// Used when a debt has no prior payment date to compare against yet (its first tracked month).
+export const FALLBACK_DEBT_ACCRUAL_DAYS = 30;
+
+// Debt interest accrues daily off the APR, so it depends on days elapsed since the last payment.
+export const calculateDailyDebtInterest = (remainingBalance: number, interestRatePercent: number, days: number): number => {
+  return remainingBalance * (interestRatePercent / 100 / 365) * days;
+};
+
 // Calculates the "Last Working Day" (shifts backward if the last day is a weekend)
 export const getLastWorkingDayOfMonth = (year: number, month: number): Date => {
   const lastDay = getLastDayOfMonth(year, month);

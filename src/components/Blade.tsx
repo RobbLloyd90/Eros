@@ -21,6 +21,7 @@ interface BladeProps {
   openEditEntry: (bladeId: 'inflows' | 'outflows' | 'savings' | 'debt' | 'goals', entry: Entry | SavingsEntry | DebtEntry) => void;
   handleRemoveEntry: (bladeId: 'inflows' | 'outflows' | 'savings' | 'debt', id: string) => void;
   openEditGoal: (goal: Goal) => void;
+  openDeleteGoal: (goal: Goal) => void;
 }
 
 export const Blade: React.FC<BladeProps> = ({
@@ -37,7 +38,8 @@ export const Blade: React.FC<BladeProps> = ({
   isLight,
   openEditEntry,
   handleRemoveEntry,
-  openEditGoal
+  openEditGoal,
+  openDeleteGoal
 }) => {
   const getBladeEntries = (bladeId: string): (Entry | SavingsEntry | DebtEntry)[] => {
     switch (bladeId) {
@@ -196,6 +198,7 @@ export const Blade: React.FC<BladeProps> = ({
                     tStyle={tStyle}
                     isLight={isLight}
                     onEdit={openEditGoal}
+                    onRemove={openDeleteGoal}
                   />
                 ))}
               </>

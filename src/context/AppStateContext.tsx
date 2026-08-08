@@ -41,6 +41,7 @@ export interface AppStateValue {
   openEditEntry: (bladeId: ModalState['bladeId'], entry: Entry | SavingsEntry | DebtEntry) => void;
   handleRemoveEntry: (bladeId: 'inflows' | 'outflows' | 'savings' | 'debt', id: string) => void;
   openEditGoal: (goal: Goal) => void;
+  openDeleteGoal: (goal: Goal) => void;
   privacySettings: PrivacySettings;
   setPrivacySettings: (p: PrivacySettings) => void;
 }

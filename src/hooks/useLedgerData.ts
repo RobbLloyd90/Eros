@@ -1,10 +1,14 @@
 import { useState } from 'react';
 import type { GlobalLedger, UserProfile, ModalState, FoodModalState, Goal, Entry, SavingsEntry, DebtEntry, FoodEntry } from '../types';
+import { calculateMonthlySavingsInterest, calculateDailyDebtInterest, getDaysBetweenDates, FALLBACK_DEBT_ACCRUAL_DAYS } from '../utils/dataEngine';
 import { 
   useCurrentUserEffect, 
   useTrackingEngineEffect, 
   useSaveLedgerEffect, 
-  useRecurringInjectorEffect 
+  useRecurringInjectorEffect,
+  useSavingsCarryoverEffect,
+  useGoalCarryoverEffect,
+  useDebtCarryoverEffect
 } from '../useEffects/useLedgerDataEffects';
 
 export const useLedgerData = (currentUser: UserProfile | null) => {
@@ -19,6 +23,9 @@ export const useLedgerData = (currentUser: UserProfile | null) => {
   useTrackingEngineEffect(ledger);
   useSaveLedgerEffect(ledger, currentUser);
   useRecurringInjectorEffect(currentUser, ledger, currentYear, currentMonth, activeMonthKey, setLedger);
+  useSavingsCarryoverEffect(currentUser, ledger, currentYear, currentMonth, activeMonthKey, setLedger);
+  useGoalCarryoverEffect(currentUser, ledger, currentYear, currentMonth, activeMonthKey, setLedger);
+  useDebtCarryoverEffect(currentUser, ledger, currentYear, currentMonth, activeMonthKey, setLedger);
 
   const rawMonthData = ledger[activeMonthKey]?.data || { inflows: [], outflows: [], savings: [], debt: [] };
   const activeGoals = ledger[activeMonthKey]?.goals || [];
@@ -43,11 +50,15 @@ export const useLedgerData = (currentUser: UserProfile | null) => {
         return { ...prev, [activeMonthKey]: { ...monthData, goals: modal.mode === 'add' ? [...monthData.goals, goalToSave] : monthData.goals.map((g) => (g.id === modal.id ? goalToSave : g)) } };
       });
     } else if (modal.bladeId === 'savings') {
+      const isFixedInterestRate = !!modal.isFixedInterestRate;
+      const currentBalance = parseFloat(modal.currentBalance) || 0;
+      const interestRate = parseFloat(modal.interestRate) || 0;
       const entryToSave: SavingsEntry = {
         id: modal.mode === 'add' ? Date.now().toString() : modal.id!, name: modal.name,
-        currentBalance: parseFloat(modal.currentBalance) || 0, contribution: parseFloat(modal.contribution) || 0,
-        interestRate: parseFloat(modal.interestRate) || 0, interestEarned: parseFloat(modal.interestEarned) || 0,
-        isRecurring: modal.isRecurring
+        currentBalance, contribution: parseFloat(modal.contribution) || 0,
+        interestRate, interestEarned: isFixedInterestRate ? calculateMonthlySavingsInterest(currentBalance, interestRate) : (parseFloat(modal.interestEarned) || 0),
+        isRecurringContribution: !!modal.isRecurringContribution,
+        isFixedInterestRate
       };
       setLedger((prev) => {
         const monthData = prev[activeMonthKey] || { data: { inflows: [], outflows: [], savings: [], debt: [] }, goals: [], food: [] };
@@ -55,11 +66,15 @@ export const useLedgerData = (currentUser: UserProfile | null) => {
         return { ...prev, [activeMonthKey]: { ...monthData, data: { ...monthData.data, savings: updated } } };
       });
     } else if (modal.bladeId === 'debt') {
+      const currentBalance = parseFloat(modal.currentBalance) || 0;
+      const interestRate = parseFloat(modal.interestRate) || 0;
+      const days = modal.previousPaymentDate ? getDaysBetweenDates(modal.previousPaymentDate, modal.paymentDate || '') : FALLBACK_DEBT_ACCRUAL_DAYS;
       const entryToSave: DebtEntry = {
         id: modal.mode === 'add' ? Date.now().toString() : modal.id!, name: modal.name,
-        currentBalance: parseFloat(modal.currentBalance) || 0, interestRate: parseFloat(modal.interestRate) || 0,
+        currentBalance, interestRate,
         minimumPayment: parseFloat(modal.minimumPayment) || 0, actualPayment: parseFloat(modal.actualPayment) || 0,
-        interestAccrued: parseFloat(modal.interestAccrued) || 0
+        interestAccrued: calculateDailyDebtInterest(currentBalance, interestRate, days),
+        paymentDate: modal.paymentDate || undefined
       };
       setLedger((prev) => {
         const monthData = prev[activeMonthKey] || { data: { inflows: [], outflows: [], savings: [], debt: [] }, goals: [], food: [] };
@@ -104,5 +119,24 @@ export const useLedgerData = (currentUser: UserProfile | null) => {
     });
   };
 
-  return { ledger, currentYear, setCurrentYear, currentMonth, setCurrentMonth, activeMonthKey, activeGoals, activeFood, activeData, handleModalSave, handleFoodSave, handleRemoveEntry, handleRemoveFood };
+  // Removes the goal from this month onward only; past months keep their historical record.
+  const handleRemoveGoal = (id: string) => {
+    setLedger((prev) => {
+      if (!prev[activeMonthKey]) return prev;
+      return { ...prev, [activeMonthKey]: { ...prev[activeMonthKey], goals: prev[activeMonthKey].goals.filter((g) => g.id !== id) } };
+    });
+  };
+
+  // Strips the goal from every month in the ledger, past and future.
+  const handleRemoveGoalEverywhere = (id: string) => {
+    setLedger((prev) => {
+      const updated: GlobalLedger = {};
+      Object.keys(prev).forEach((key) => {
+        updated[key] = { ...prev[key], goals: prev[key].goals.filter((g) => g.id !== id) };
+      });
+      return updated;
+    });
+  };
+
+  return { ledger, currentYear, setCurrentYear, currentMonth, setCurrentMonth, activeMonthKey, activeGoals, activeFood, activeData, handleModalSave, handleFoodSave, handleRemoveEntry, handleRemoveFood, handleRemoveGoal, handleRemoveGoalEverywhere };
 };

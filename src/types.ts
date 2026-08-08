@@ -33,8 +33,10 @@ export type SavingsEntry = {
   contribution?: number;
   interestRate?: number;
   interestEarned?: number;
-  // Reused as "non-fixed interest" toggle in the savings entry UI.
-  isRecurring?: boolean;
+  // Carries the same contribution amount forward into next month when true (see savings carryover engine).
+  isRecurringContribution?: boolean;
+  // When true, `interestEarned` is auto-calculated from currentBalance * interestRate instead of being manually entered.
+  isFixedInterestRate?: boolean;
 };
 
 export type DebtEntry = {
@@ -45,6 +47,9 @@ export type DebtEntry = {
   minimumPayment?: number;
   actualPayment?: number;
   interestAccrued?: number;
+  // Date of the most recently recorded payment; the gap to the next payment date drives the daily interest calc.
+  // Debt interest is always calculated from the fixed APR (no manual-entry toggle, unlike savings).
+  paymentDate?: string;
 };
 
 // A goal can pull from multiple savings accounts (e.g. a house deposit fed by a LISA + a regular savings account);
@@ -93,6 +98,15 @@ export type ModalState = {
   isRecurring?: boolean;
   recurringFreq?: string;
   fortnightStartWeek?: number;
+
+  // --- Savings-specific toggles ---
+  isRecurringContribution?: boolean;
+  isFixedInterestRate?: boolean;
+
+  // --- Debt-specific fields ---
+  paymentDate?: string;
+  // Snapshot of the entry's paymentDate as it was when the modal opened; used to compute days elapsed once the user picks a new paymentDate. Not persisted.
+  previousPaymentDate?: string;
 };
 
 export type UserProfile = {
@@ -143,6 +157,12 @@ export type DeleteChartModalState = {
   isOpen: boolean; 
   chartId: string; 
   chartTitle: string; 
+};
+
+export type DeleteGoalModalState = {
+  isOpen: boolean;
+  goalId: string;
+  goalName: string;
 };
 
 export type ChartDataPoint = { label: string; value: number; color: string; percentage?: number };

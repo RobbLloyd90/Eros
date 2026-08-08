@@ -1,8 +1,8 @@
 // ledgerEffects.ts
 import { useEffect } from 'react';
 import { db } from '../storage/database';
-import { getLastWorkingDayOfMonth, getLastWorkingFridayOfMonth } from '../utils/dataEngine';
-import type { GlobalLedger, UserProfile } from '../types';
+import { getLastWorkingDayOfMonth, getLastWorkingFridayOfMonth, calculateMonthlySavingsInterest } from '../utils/dataEngine';
+import type { GlobalLedger, UserProfile, SavingsEntry, DebtEntry, Goal } from '../types';
 
 /**
  * Initializes the ledger data for the current user and handles the rollover 
@@ -153,6 +153,183 @@ export function useRecurringInjectorEffect(
           }));
         }
       }
+    }
+  }, [currentYear, currentMonth, ledger, activeMonthKey, currentUser, setLedger]);
+}
+
+/**
+ * Rolls each savings account's ending balance forward into the next month it's viewed
+ * (identity + id are preserved so Goal.linkedSavings keeps pointing at the same account).
+ * Contribution only carries forward if the account has "recurring contribution" enabled;
+ * interest earned resets to 0 unless "fixed interest rate" is enabled, in which case it's
+ * recalculated from the new starting balance.
+ */
+export function useSavingsCarryoverEffect(
+  currentUser: UserProfile | null,
+  ledger: GlobalLedger,
+  currentYear: number,
+  currentMonth: number,
+  activeMonthKey: string,
+  setLedger: React.Dispatch<React.SetStateAction<GlobalLedger>>
+) {
+  useEffect(() => {
+    if (!currentUser || Object.keys(ledger).length === 0) return;
+
+    let prevMonth = currentMonth - 1;
+    let prevYear = currentYear;
+    if (prevMonth === 0) {
+      prevMonth = 12;
+      prevYear -= 1;
+    }
+    const prevMonthKey = `${prevYear}-${String(prevMonth).padStart(2, '0')}`;
+
+    const prevSavings = ledger[prevMonthKey]?.data.savings || [];
+    if (prevSavings.length === 0) return;
+
+    const currentMonthData = ledger[activeMonthKey] || { data: { inflows: [], outflows: [], savings: [], debt: [] }, goals: [], food: [] };
+    const currentSavings = currentMonthData.data.savings || [];
+
+    // Only roll forward accounts that haven't already been carried into this month
+    const missing = prevSavings.filter(prevEntry => !currentSavings.some(cur => cur.id === prevEntry.id));
+
+    if (missing.length > 0) {
+      console.log(`[SAVINGS CARRYOVER] Rolling ${missing.length} savings account(s) forward into ${activeMonthKey}...`);
+
+      const rolledOver: SavingsEntry[] = missing.map(prevEntry => {
+        const endingBalance = (prevEntry.currentBalance || 0) + (prevEntry.contribution || 0) + (prevEntry.interestEarned || 0);
+        const nextContribution = prevEntry.isRecurringContribution ? (prevEntry.contribution || 0) : 0;
+        const nextInterestEarned = prevEntry.isFixedInterestRate
+          ? calculateMonthlySavingsInterest(endingBalance, prevEntry.interestRate || 0)
+          : 0;
+
+        return {
+          ...prevEntry,
+          currentBalance: endingBalance,
+          contribution: nextContribution,
+          interestEarned: nextInterestEarned
+        };
+      });
+
+      setLedger(prev => ({
+        ...prev,
+        [activeMonthKey]: {
+          ...currentMonthData,
+          data: {
+            ...currentMonthData.data,
+            savings: [...currentSavings, ...rolledOver]
+          }
+        }
+      }));
+    }
+  }, [currentYear, currentMonth, ledger, activeMonthKey, currentUser, setLedger]);
+}
+
+/**
+ * Goals carry forward automatically (no opt-in checkbox): once created, a goal keeps
+ * appearing in every future month until it's removed. Removing it from a given month
+ * (via `handleRemoveGoal`) simply stops it being found here on the next month, so it
+ * naturally stops propagating forward from that point while past months are untouched.
+ */
+export function useGoalCarryoverEffect(
+  currentUser: UserProfile | null,
+  ledger: GlobalLedger,
+  currentYear: number,
+  currentMonth: number,
+  activeMonthKey: string,
+  setLedger: React.Dispatch<React.SetStateAction<GlobalLedger>>
+) {
+  useEffect(() => {
+    if (!currentUser || Object.keys(ledger).length === 0) return;
+
+    let prevMonth = currentMonth - 1;
+    let prevYear = currentYear;
+    if (prevMonth === 0) {
+      prevMonth = 12;
+      prevYear -= 1;
+    }
+    const prevMonthKey = `${prevYear}-${String(prevMonth).padStart(2, '0')}`;
+
+    const prevGoals = ledger[prevMonthKey]?.goals || [];
+    if (prevGoals.length === 0) return;
+
+    const currentMonthData = ledger[activeMonthKey] || { data: { inflows: [], outflows: [], savings: [], debt: [] }, goals: [], food: [] };
+    const currentGoals = currentMonthData.goals || [];
+
+    const missing = prevGoals.filter(prevGoal => !currentGoals.some(g => g.id === prevGoal.id));
+
+    if (missing.length > 0) {
+      console.log(`[GOAL CARRYOVER] Rolling ${missing.length} goal(s) forward into ${activeMonthKey}...`);
+
+      const rolledOver: Goal[] = missing.map(prevGoal => ({ ...prevGoal }));
+
+      setLedger(prev => ({
+        ...prev,
+        [activeMonthKey]: {
+          ...currentMonthData,
+          goals: [...currentGoals, ...rolledOver]
+        }
+      }));
+    }
+  }, [currentYear, currentMonth, ledger, activeMonthKey, currentUser, setLedger]);
+}
+
+/**
+ * Rolls each debt's remaining balance forward into the next month it's viewed (identity + id
+ * preserved). The ending balance (currentBalance + interestAccrued - actualPayment) becomes
+ * next month's starting "remaining loan value". actualPayment carries forward unchanged so the
+ * user doesn't have to re-enter their regular repayment; interestAccrued resets to 0 (it's
+ * always recalculated fresh from the fixed APR once this month's payment date is set).
+ * paymentDate also carries forward unchanged, giving the "previous payment date" reference.
+ */
+export function useDebtCarryoverEffect(
+  currentUser: UserProfile | null,
+  ledger: GlobalLedger,
+  currentYear: number,
+  currentMonth: number,
+  activeMonthKey: string,
+  setLedger: React.Dispatch<React.SetStateAction<GlobalLedger>>
+) {
+  useEffect(() => {
+    if (!currentUser || Object.keys(ledger).length === 0) return;
+
+    let prevMonth = currentMonth - 1;
+    let prevYear = currentYear;
+    if (prevMonth === 0) {
+      prevMonth = 12;
+      prevYear -= 1;
+    }
+    const prevMonthKey = `${prevYear}-${String(prevMonth).padStart(2, '0')}`;
+
+    const prevDebt = ledger[prevMonthKey]?.data.debt || [];
+    if (prevDebt.length === 0) return;
+
+    const currentMonthData = ledger[activeMonthKey] || { data: { inflows: [], outflows: [], savings: [], debt: [] }, goals: [], food: [] };
+    const currentDebt = currentMonthData.data.debt || [];
+
+    const missing = prevDebt.filter(prevEntry => !currentDebt.some(cur => cur.id === prevEntry.id));
+
+    if (missing.length > 0) {
+      console.log(`[DEBT CARRYOVER] Rolling ${missing.length} debt(s) forward into ${activeMonthKey}...`);
+
+      const rolledOver: DebtEntry[] = missing.map(prevEntry => {
+        const endingBalance = (prevEntry.currentBalance || 0) + (prevEntry.interestAccrued || 0) - (prevEntry.actualPayment || 0);
+        return {
+          ...prevEntry,
+          currentBalance: endingBalance,
+          interestAccrued: 0
+        };
+      });
+
+      setLedger(prev => ({
+        ...prev,
+        [activeMonthKey]: {
+          ...currentMonthData,
+          data: {
+            ...currentMonthData.data,
+            debt: [...currentDebt, ...rolledOver]
+          }
+        }
+      }));
     }
   }, [currentYear, currentMonth, ledger, activeMonthKey, currentUser, setLedger]);
 }
