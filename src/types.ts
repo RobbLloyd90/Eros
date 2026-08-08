@@ -67,7 +67,14 @@ export type FoodEntry = {
 };
 
 export type BladeData = { inflows: Entry[]; outflows: Entry[]; savings: SavingsEntry[]; debt: DebtEntry[] };
-export type MonthlyLedger = { data: BladeData; goals: Goal[]; food: FoodEntry[] };
+export type MonthlyLedger = {
+  data: BladeData;
+  goals: Goal[];
+  food: FoodEntry[];
+  // Ids explicitly removed as of this month; carryover effects must never re-inject these,
+  // even though an earlier month may still have them (kept there for historical record).
+  removedIds?: string[];
+};
 export type GlobalLedger = Record<string, MonthlyLedger>;
 
 export type ThemeType = 'bondi' | 'cybercore' | 'softtech' | 'aero_g3' | 'nothing_os' | 'nothing_glow';

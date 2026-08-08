@@ -53,11 +53,6 @@ export const AddChartModal: React.FC<AddChartModalProps> = ({
 
       <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px', overflowY: 'auto' }}>
         <div>
-          <label style={labelStyle as any}>CHART TITLE</label>
-          <input style={inputStyle} placeholder="e.g., House Deposit Progress" value={modal.title} onChange={(e) => setModal({ ...modal, title: e.target.value })} />
-        </div>
-
-        <div>
           <label style={labelStyle as any}>VISUAL STYLE</label>
           <select style={inputStyle} value={modal.type} onChange={(e) => {
               const newType = e.target.value as any;

@@ -19,6 +19,25 @@ export const getDaysBetweenDates = (startDate: string, endDate: string): number 
 // Used when a debt has no prior payment date to compare against yet (its first tracked month).
 export const FALLBACK_DEBT_ACCRUAL_DAYS = 30;
 
+// Advances a YYYY-MM-DD date by one month, preserving "end of month" cadence: if the date is
+// the last day of its month (e.g. 31 Aug), the result is the last day of next month (30 Sep),
+// rather than clamping to the same numeric day every time.
+export const addOneMonthPreservingCadence = (dateStr: string): string => {
+  const date = new Date(dateStr);
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  const day = date.getDate();
+
+  const daysInCurrentMonth = new Date(year, month + 1, 0).getDate();
+  const isLastDayOfMonth = day === daysInCurrentMonth;
+
+  const daysInNextMonth = new Date(year, month + 2, 0).getDate();
+  const nextDay = isLastDayOfMonth ? daysInNextMonth : Math.min(day, daysInNextMonth);
+
+  const result = new Date(year, month + 1, nextDay);
+  return result.toISOString().slice(0, 10);
+};
+
 // Debt interest accrues daily off the APR, so it depends on days elapsed since the last payment.
 export const calculateDailyDebtInterest = (remainingBalance: number, interestRatePercent: number, days: number): number => {
   return remainingBalance * (interestRatePercent / 100 / 365) * days;

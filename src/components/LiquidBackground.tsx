@@ -1,4 +1,3 @@
-import React from 'react';
 import type { ThemeType } from '../types';
 import { isNothingTheme } from '../utils/themeUtils';
 

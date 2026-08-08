@@ -59,7 +59,7 @@ export const CustomLineChart: React.FC<CustomLineChartProps> = ({ data, theme, t
           )}
 
           {/* Lines */}
-          {data.datasets.map((dataset, i) => {
+          {data.datasets.map((dataset) => {
             const points = dataset.data.map((val, index) => `${getX(index)},${getY(val)}`).join(' ');
             return (
               <g key={dataset.label}>

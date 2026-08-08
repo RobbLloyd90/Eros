@@ -1,7 +1,7 @@
 // ledgerEffects.ts
 import { useEffect } from 'react';
 import { db } from '../storage/database';
-import { getLastWorkingDayOfMonth, getLastWorkingFridayOfMonth, calculateMonthlySavingsInterest } from '../utils/dataEngine';
+import { getLastWorkingDayOfMonth, getLastWorkingFridayOfMonth, calculateMonthlySavingsInterest, calculateDailyDebtInterest, getDaysBetweenDates, addOneMonthPreservingCadence, FALLBACK_DEBT_ACCRUAL_DAYS } from '../utils/dataEngine';
 import type { GlobalLedger, UserProfile, SavingsEntry, DebtEntry, Goal } from '../types';
 
 /**
@@ -127,19 +127,18 @@ export function useRecurringInjectorEffect(
       if (recurringInflows.length > 0) {
         const currentMonthData = ledger[activeMonthKey] || { data: { inflows: [], outflows: [], savings: [], debt: [] }, goals: [], food: [] };
         const currentInflows = currentMonthData.data.inflows || [];
+        const removedIds = new Set([...(currentMonthData.removedIds || []), ...(ledger[prevMonthKey].removedIds || [])]);
 
-        // Check if the recurring items from last month are MISSING in the current month
+        // Check if the recurring items from last month are MISSING in the current month (same id = same identity)
+        // and haven't been explicitly removed (tombstoned) as of this month.
         const missingRecurring = recurringInflows.filter(prevEntry => 
-          !currentInflows.some(currEntry => currEntry.name === prevEntry.name && currEntry.isRecurring)
+          !currentInflows.some(currEntry => currEntry.id === prevEntry.id) && !removedIds.has(prevEntry.id)
         );
 
         if (missingRecurring.length > 0) {
           console.log(`[INJECTOR] Found ${missingRecurring.length} missing recurring inflows. Injecting into ${activeMonthKey}...`);
-          
-          const clonedInflows = missingRecurring.map(entry => ({
-            ...entry,
-            id: `rec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-          }));
+
+          const clonedInflows = missingRecurring.map(entry => ({ ...entry }));
 
           setLedger(prev => ({
             ...prev,
@@ -148,7 +147,8 @@ export function useRecurringInjectorEffect(
               data: { 
                 ...currentMonthData.data, 
                 inflows: [...currentInflows, ...clonedInflows] 
-              }
+              },
+              removedIds: Array.from(removedIds)
             }
           }));
         }
@@ -188,9 +188,10 @@ export function useSavingsCarryoverEffect(
 
     const currentMonthData = ledger[activeMonthKey] || { data: { inflows: [], outflows: [], savings: [], debt: [] }, goals: [], food: [] };
     const currentSavings = currentMonthData.data.savings || [];
+    const removedIds = new Set([...(currentMonthData.removedIds || []), ...(ledger[prevMonthKey]?.removedIds || [])]);
 
-    // Only roll forward accounts that haven't already been carried into this month
-    const missing = prevSavings.filter(prevEntry => !currentSavings.some(cur => cur.id === prevEntry.id));
+    // Only roll forward accounts that haven't already been carried into this month or been tombstoned
+    const missing = prevSavings.filter(prevEntry => !currentSavings.some(cur => cur.id === prevEntry.id) && !removedIds.has(prevEntry.id));
 
     if (missing.length > 0) {
       console.log(`[SAVINGS CARRYOVER] Rolling ${missing.length} savings account(s) forward into ${activeMonthKey}...`);
@@ -217,7 +218,8 @@ export function useSavingsCarryoverEffect(
           data: {
             ...currentMonthData.data,
             savings: [...currentSavings, ...rolledOver]
-          }
+          },
+          removedIds: Array.from(removedIds)
         }
       }));
     }
@@ -254,8 +256,9 @@ export function useGoalCarryoverEffect(
 
     const currentMonthData = ledger[activeMonthKey] || { data: { inflows: [], outflows: [], savings: [], debt: [] }, goals: [], food: [] };
     const currentGoals = currentMonthData.goals || [];
+    const removedIds = new Set([...(currentMonthData.removedIds || []), ...(ledger[prevMonthKey]?.removedIds || [])]);
 
-    const missing = prevGoals.filter(prevGoal => !currentGoals.some(g => g.id === prevGoal.id));
+    const missing = prevGoals.filter(prevGoal => !currentGoals.some(g => g.id === prevGoal.id) && !removedIds.has(prevGoal.id));
 
     if (missing.length > 0) {
       console.log(`[GOAL CARRYOVER] Rolling ${missing.length} goal(s) forward into ${activeMonthKey}...`);
@@ -266,7 +269,8 @@ export function useGoalCarryoverEffect(
         ...prev,
         [activeMonthKey]: {
           ...currentMonthData,
-          goals: [...currentGoals, ...rolledOver]
+          goals: [...currentGoals, ...rolledOver],
+          removedIds: Array.from(removedIds)
         }
       }));
     }
@@ -277,9 +281,10 @@ export function useGoalCarryoverEffect(
  * Rolls each debt's remaining balance forward into the next month it's viewed (identity + id
  * preserved). The ending balance (currentBalance + interestAccrued - actualPayment) becomes
  * next month's starting "remaining loan value". actualPayment carries forward unchanged so the
- * user doesn't have to re-enter their regular repayment; interestAccrued resets to 0 (it's
- * always recalculated fresh from the fixed APR once this month's payment date is set).
- * paymentDate also carries forward unchanged, giving the "previous payment date" reference.
+ * user doesn't have to re-enter their regular repayment. paymentDate automatically advances by
+ * one month (preserving end-of-month cadence, e.g. 31 Aug -> 30 Sep -> 31 Oct), and
+ * interestAccrued is recalculated immediately from the new balance and the days between the
+ * old and new payment dates, so no manual re-entry is needed each month.
  */
 export function useDebtCarryoverEffect(
   currentUser: UserProfile | null,
@@ -305,18 +310,23 @@ export function useDebtCarryoverEffect(
 
     const currentMonthData = ledger[activeMonthKey] || { data: { inflows: [], outflows: [], savings: [], debt: [] }, goals: [], food: [] };
     const currentDebt = currentMonthData.data.debt || [];
+    const removedIds = new Set([...(currentMonthData.removedIds || []), ...(ledger[prevMonthKey]?.removedIds || [])]);
 
-    const missing = prevDebt.filter(prevEntry => !currentDebt.some(cur => cur.id === prevEntry.id));
+    const missing = prevDebt.filter(prevEntry => !currentDebt.some(cur => cur.id === prevEntry.id) && !removedIds.has(prevEntry.id));
 
     if (missing.length > 0) {
       console.log(`[DEBT CARRYOVER] Rolling ${missing.length} debt(s) forward into ${activeMonthKey}...`);
 
       const rolledOver: DebtEntry[] = missing.map(prevEntry => {
         const endingBalance = (prevEntry.currentBalance || 0) + (prevEntry.interestAccrued || 0) - (prevEntry.actualPayment || 0);
+        const nextPaymentDate = prevEntry.paymentDate ? addOneMonthPreservingCadence(prevEntry.paymentDate) : undefined;
+        const days = prevEntry.paymentDate && nextPaymentDate ? getDaysBetweenDates(prevEntry.paymentDate, nextPaymentDate) : FALLBACK_DEBT_ACCRUAL_DAYS;
+
         return {
           ...prevEntry,
           currentBalance: endingBalance,
-          interestAccrued: 0
+          paymentDate: nextPaymentDate,
+          interestAccrued: calculateDailyDebtInterest(endingBalance, prevEntry.interestRate || 0, days)
         };
       });
 
@@ -327,7 +337,8 @@ export function useDebtCarryoverEffect(
           data: {
             ...currentMonthData.data,
             debt: [...currentDebt, ...rolledOver]
-          }
+          },
+          removedIds: Array.from(removedIds)
         }
       }));
     }

@@ -1,4 +1,4 @@
-import type { BladeData, Goal, GlobalLedger } from './types';
+import type { GlobalLedger } from './types';
 
 export const TAB_HEIGHT = 65;
 

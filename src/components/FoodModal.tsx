@@ -53,7 +53,7 @@ export const FoodModal: React.FC<FoodModalProps> = ({ modal, setModal, theme, tS
             fontFamily: getLabelFontFamily(theme)
           }}
         >
-          {modal.mode === 'add' ? 'LOG FOOD ITEM' : 'EDIT FOOD ITEM'}
+          {modal.mode === 'add' ? 'LOG ITEM' : 'EDIT ITEM'}
         </span>
         <button
           type="button"

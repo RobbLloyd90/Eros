@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, ShoppingCart, Plus, Layers, Eye, EyeOff } from 'lucide-react';
 import type { ThemeType, PrivacyMode, ChartConfig } from '../types';
@@ -63,16 +63,8 @@ export const Dashboard: React.FC = () => {
   const onEditChart = (chart: ChartConfig) => setChartModal({ isOpen: true, mode: 'edit', id: chart.id, title: chart.title, type: chart.type, source: chart.source, targetIds: chart.targetIds || [] });
   const onDeleteChart = (id: string, title: string) => setDeleteChartModal({ isOpen: true, chartId: id, chartTitle: title });
 
-  const [isEditMode, setIsEditMode] = useState(false);
-  const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  
   const currentMonthKey = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
   const activeMonthData = ledger[currentMonthKey];
-
-  const handlePointerDown = () => {
-    pressTimer.current = setTimeout(() => { setIsEditMode(true); if (navigator.vibrate) navigator.vibrate(50); }, 2000);
-  };
-  const cancelPress = () => { if (pressTimer.current) clearTimeout(pressTimer.current); };
 
   let foodTotal = 0;
   let inflowTotal = 0;
@@ -101,7 +93,7 @@ export const Dashboard: React.FC = () => {
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} onClick={() => { if (isEditMode) setIsEditMode(false); }} style={{ padding: '0 16px 24px 16px', display: 'flex', flexDirection: 'column', gap: '16px', height: '100%', overflowY: 'auto' }}>
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} style={{ padding: '0 16px 24px 16px', display: 'flex', flexDirection: 'column', gap: '16px', height: '100%', overflowY: 'auto' }}>
       
       <div style={{ fontSize: '11px', color: tStyle.colors.secondary, letterSpacing: '2px', fontWeight: 'bold', marginTop: '8px', borderBottom: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.1)', paddingBottom: '6px', fontFamily: getLabelFontFamily(theme) }}>
         QUICK ACCESS
@@ -171,7 +163,7 @@ export const Dashboard: React.FC = () => {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', borderBottom: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.1)', paddingBottom: '6px' }}>
         <div style={{ fontSize: '11px', color: tStyle.colors.secondary, letterSpacing: '2px', fontWeight: 'bold', fontFamily: getLabelFontFamily(theme) }}>ANALYTICS VISUALIZATION</div>
-        {isEditMode ? <button onClick={() => setIsEditMode(false)} style={{ background: tStyle.colors.metricBg, border: `1px solid ${tStyle.colors.pos}`, padding: '4px 8px', borderRadius: '6px', cursor: 'pointer', color: tStyle.colors.pos, fontSize: '9px', fontWeight: 'bold', fontFamily: getLabelFontFamily(theme) }}>DONE EDITING</button> : <button onClick={onAddChart} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', color: tStyle.colors.pos, fontSize: '9px', fontWeight: 'bold', fontFamily: getLabelFontFamily(theme) }}><Plus size={12} strokeWidth={3} /> ADD CHART</button>}
+        <button type="button" onClick={onAddChart} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', color: tStyle.colors.pos, fontSize: '9px', fontWeight: 'bold', fontFamily: getLabelFontFamily(theme) }}><Plus size={12} strokeWidth={3} /> ADD CHART</button>
       </div>
 
       {userCharts.length === 0 ? (
@@ -179,7 +171,7 @@ export const Dashboard: React.FC = () => {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingBottom: '24px' }}>
           {userCharts.map((chart) => (
-            <ChartWidget key={chart.id} chart={chart} isEditMode={isEditMode} theme={theme} tStyle={tStyle} isLight={isLight} containerStyle={containerStyle} onPointerDown={handlePointerDown} cancelPress={cancelPress} onEdit={onEditChart} onDelete={onDeleteChart} pieBarData={getChartData(chart.source, activeMonthData, theme)} ledger={ledger} />
+            <ChartWidget key={chart.id} chart={chart} theme={theme} tStyle={tStyle} isLight={isLight} containerStyle={containerStyle} onEdit={onEditChart} onDelete={onDeleteChart} pieBarData={getChartData(chart.source, activeMonthData, theme)} ledger={ledger} />
           ))}
         </div>
       )}

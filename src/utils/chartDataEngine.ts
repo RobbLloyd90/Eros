@@ -1,5 +1,21 @@
 import { MONTH_NAMES } from '../config';
-import type { GlobalLedger, ChartDataPoint, LineChartData, ThemeType, ChartConfig } from '../types';
+import type { GlobalLedger, ChartDataPoint, LineChartData, ThemeType, ChartConfig, ChartSource } from '../types';
+
+const CHART_SOURCE_LABELS: Record<ChartSource, string> = {
+  food: 'Food Budget (By Category)',
+  outflows: 'Outgoings (By Item)',
+  inflows: 'Incoming (By Source)',
+  netWorth: 'Long-Term Tracking (Savings vs Debt)',
+  savings_trend: 'Total Savings Over Time',
+  debt_trend: 'Total Debt Over Time',
+  inflows_trend: 'Total Incoming Over Time',
+  outflows_trend: 'Total Outgoings Over Time',
+  food_trend: 'Total Food Budget Over Time',
+  goal_trend: 'Goal Progress'
+};
+
+// Charts no longer have a manually-typed title; this derives one from the selected data source.
+export const getChartSourceLabel = (source: ChartSource): string => CHART_SOURCE_LABELS[source] || 'Chart';
 
 export const getChartData = (source: string, activeMonthData: any, theme: ThemeType): ChartDataPoint[] => {
   if (!activeMonthData) return [];
@@ -8,7 +24,7 @@ export const getChartData = (source: string, activeMonthData: any, theme: ThemeT
   if (source === 'food') {
     const totals: Record<string, number> = {};
     (activeMonthData.food || []).forEach((f: any) => totals[f.category || 'Other'] = (totals[f.category || 'Other'] || 0) + f.price);
-    const totalSpend = Object.values(totals).reduce((a, b) => a + b, 0);
+    const totalSpend = Object.values(totals).reduce((a: number, b: number) => a + b, 0);
 
     return Object.keys(totals).map((cat, i) => ({
       label: cat, value: totals[cat], percentage: totalSpend ? (totals[cat] / totalSpend) * 100 : 0,
@@ -22,7 +38,7 @@ export const getChartData = (source: string, activeMonthData: any, theme: ThemeT
     return dataArr.map((e: any, i: number) => ({
       label: e.name, value: e.actual, percentage: totalSpend ? (e.actual / totalSpend) * 100 : 0,
       color: theme === 'nothing_glow' && i === 0 ? '#CEFF00' : theme === 'nothing_os' ? (i % 2 === 0 ? '#fff' : '#555') : chartColors[i % chartColors.length]
-    })).sort((a, b) => b.value - a.value);
+    })).sort((a: ChartDataPoint, b: ChartDataPoint) => b.value - a.value);
   }
   return [];
 };
@@ -93,8 +109,8 @@ export const getLineChartData = (chart: ChartConfig, ledger: GlobalLedger, theme
       else if (chart.source === 'savings_trend') data1.push(totalSav);
       else if (chart.source === 'debt_trend') data1.push(totalDbt);
     } 
-    else if (chart.source === 'inflows_trend') data1.push((monthLedger.data?.inflows || []).reduce((acc, curr) => acc + curr.actual, 0));
-    else if (chart.source === 'outflows_trend') data1.push((monthLedger.data?.outflows || []).reduce((acc, curr) => acc + curr.actual, 0));
+    else if (chart.source === 'inflows_trend') data1.push((monthLedger.data?.inflows || []).reduce((acc, curr) => acc + (curr.actual || 0), 0));
+    else if (chart.source === 'outflows_trend') data1.push((monthLedger.data?.outflows || []).reduce((acc, curr) => acc + (curr.actual || 0), 0));
     else if (chart.source === 'food_trend') data1.push((monthLedger.food || []).reduce((acc, curr) => acc + curr.price, 0));
     
     // Calculate linked savings strictly for this specific goal

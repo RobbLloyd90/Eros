@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { ThemeType, ModalState, FoodModalState, ChartModalState, ChartConfig, Entry, SavingsEntry, DebtEntry, Goal, FoodEntry, PrivacySettings, DeleteGoalModalState } from './types';
 import { getThemeStyles } from './theme';
+import { getChartSourceLabel } from './utils/chartDataEngine';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { useLedgerData } from './hooks/useLedgerData';
 import { AppStateProvider, type AppView } from './context/AppStateContext';
@@ -127,6 +128,38 @@ const MainApp = () => {
   const handleRemoveGoalFromHere = () => handleRemoveGoal(deleteGoalModal.goalId);
   const handleRemoveGoalEverywhereConfirm = () => handleRemoveGoalEverywhere(deleteGoalModal.goalId);
 
+  // Editing an existing entry closes the modal after saving; adding one clears the fields so
+  // the user can keep logging more entries without reopening the modal each time.
+  const handleEntryModalSave = () => {
+    handleModalSave(modal);
+    if (modal.mode === 'edit') {
+      setModal(prev => ({ ...prev, isOpen: false }));
+    } else {
+      setModal(prev => ({
+        ...prev,
+        id: null,
+        name: '',
+        expected: '',
+        actual: '',
+        targetAmount: '',
+        targetDate: '',
+        linkedSavings: [],
+        interestRate: '',
+        contribution: '',
+        currentBalance: '',
+        interestEarned: '',
+        minimumPayment: '',
+        actualPayment: '',
+        interestAccrued: '',
+        category: '',
+        isRecurringContribution: false,
+        isFixedInterestRate: false,
+        paymentDate: '',
+        previousPaymentDate: ''
+      }));
+    }
+  };
+
   const openEditFood = (food: FoodEntry) => setFoodModal(
     {
       isOpen: true,
@@ -140,12 +173,28 @@ const MainApp = () => {
       date: food.date
     });
 
+  // Same pattern as the entry modal: editing closes the popup, logging a new item clears the fields.
+  const handleFoodModalSave = () => {
+    handleFoodSave(foodModal);
+    if (foodModal.mode === 'edit') {
+      setFoodModal(prev => ({ ...prev, isOpen: false }));
+    } else {
+      setFoodModal(prev => ({
+        ...prev,
+        id: null,
+        category: '',
+        store: '',
+        item: '',
+        price: '',
+        date: new Date().toISOString().split('T')[0]
+      }));
+    }
+  };
+
   const handleChartSave = () => {
-    if (!chartModal.title) return;
-    
     const chartData: ChartConfig = { 
       id: chartModal.mode === 'add' ? Date.now().toString() : chartModal.id!, 
-      title: chartModal.title, 
+      title: getChartSourceLabel(chartModal.source), 
       type: chartModal.type, 
       source: chartModal.source,
       targetIds: chartModal.targetIds 
@@ -257,8 +306,8 @@ const MainApp = () => {
         isLight={isLight}
         activeData={activeData}
         activeGoals={activeGoals}
-        handleModalSave={() => handleModalSave(modal)}
-        handleFoodSave={() => handleFoodSave(foodModal)}
+        handleModalSave={handleEntryModalSave}
+        handleFoodSave={handleFoodModalSave}
         handleChartSave={handleChartSave}
         handleConfirmChartDelete={handleConfirmChartDelete}
         handleRemoveGoalFromHere={handleRemoveGoalFromHere}

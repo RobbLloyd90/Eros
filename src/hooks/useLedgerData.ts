@@ -104,11 +104,22 @@ export const useLedgerData = (currentUser: UserProfile | null) => {
     });
   };
 
+  // Removes the entry from this month onward (month keys sort lexicographically, so string
+  // comparison works); past months keep their historical record. Also tombstones the id so
+  // carryover effects don't immediately re-inject it back from the still-intact prior month.
   const handleRemoveEntry = (bladeId: 'inflows' | 'outflows' | 'savings' | 'debt', id: string) => {
     setLedger((prev) => {
-      if (!prev[activeMonthKey]) return prev;
-      const updated = (prev[activeMonthKey].data[bladeId] as Array<{ id: string }>).filter((e) => e.id !== id);
-      return { ...prev, [activeMonthKey]: { ...prev[activeMonthKey], data: { ...prev[activeMonthKey].data, [bladeId]: updated } } };
+      const updated: GlobalLedger = {};
+      Object.keys(prev).forEach((key) => {
+        if (key < activeMonthKey) {
+          updated[key] = prev[key];
+          return;
+        }
+        const blade = (prev[key].data[bladeId] as Array<{ id: string }>).filter((e) => e.id !== id);
+        const removedIds = Array.from(new Set([...(prev[key].removedIds || []), id]));
+        updated[key] = { ...prev[key], data: { ...prev[key].data, [bladeId]: blade }, removedIds };
+      });
+      return updated;
     });
   };
 
@@ -119,11 +130,20 @@ export const useLedgerData = (currentUser: UserProfile | null) => {
     });
   };
 
-  // Removes the goal from this month onward only; past months keep their historical record.
+  // Removes the goal from this month onward only, and tombstones the id so it isn't re-carried
+  // forward from the still-intact prior month; past months keep their historical record.
   const handleRemoveGoal = (id: string) => {
     setLedger((prev) => {
-      if (!prev[activeMonthKey]) return prev;
-      return { ...prev, [activeMonthKey]: { ...prev[activeMonthKey], goals: prev[activeMonthKey].goals.filter((g) => g.id !== id) } };
+      const updated: GlobalLedger = {};
+      Object.keys(prev).forEach((key) => {
+        if (key < activeMonthKey) {
+          updated[key] = prev[key];
+          return;
+        }
+        const removedIds = Array.from(new Set([...(prev[key].removedIds || []), id]));
+        updated[key] = { ...prev[key], goals: prev[key].goals.filter((g) => g.id !== id), removedIds };
+      });
+      return updated;
     });
   };
 

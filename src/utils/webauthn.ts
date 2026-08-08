@@ -1,6 +1,5 @@
 // Helper to convert strings to standard ArrayBuffers for WebAuthn
 const bufferEncode = (value: string) => new TextEncoder().encode(value);
-const bufferDecode = (value: ArrayBuffer) => new TextDecoder().decode(value);
 
 // Helper to convert ArrayBuffer to Base64 for storing in localStorage
 const bufferToBase64 = (buffer: ArrayBuffer) => {

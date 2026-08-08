@@ -23,7 +23,6 @@ export const Header: React.FC<HeaderProps> = ({
   isLight,
   tStyle,
   currentView,
-  currentYear,
   currentMonth,
   onBackToDashboard,
   onBackToYear,
@@ -33,7 +32,7 @@ export const Header: React.FC<HeaderProps> = ({
 
 }) => {
 
-  const marginString = `${currentMargin >= 0 ? '+' : '-'}£${Math.abs(currentMargin || 0).toFixed(2)}`;
+  const marginString = `${(currentMargin || 0) >= 0 ? '+' : '-'}£${Math.abs(currentMargin || 0).toFixed(2)}`;
   const currentMonthName = MONTH_NAMES[currentMonth - 1]?.toUpperCase() || '';
 
   let displayTitle = 'Dashboard';
@@ -135,7 +134,7 @@ export const Header: React.FC<HeaderProps> = ({
               fontSize: '22px',
               fontWeight: 'bold',
               ...tStyle.value,
-              color: currentMargin >=0? tStyle.colors.pos : tStyle.value.neg
+              color: (currentMargin || 0) >= 0 ? tStyle.colors.pos : tStyle.value.neg
             }}
           >
             {marginString}

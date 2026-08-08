@@ -77,7 +77,7 @@ export const FoodPieChart: React.FC<FoodPieChartProps> = ({ foodEntries, theme, 
           filter: isLight ? 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))' : 'drop-shadow(0 4px 6px rgba(0,0,0,0.5))'
         }}
       >
-        {chartData.map((slice, index) => {
+        {chartData.map((slice) => {
           // Circumference of a circle with r=15.91549430918954 is exactly 100.
           const dashArray = `${slice.percentage} ${100 - slice.percentage}`;
           const dashOffset = -cumulativePercent;
