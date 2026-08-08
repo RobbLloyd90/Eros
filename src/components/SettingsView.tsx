@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Fingerprint, LogOut, Trash2, ShieldCheck, ShieldAlert, EyeOff } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
+import { Fingerprint, LogOut, Trash2, ShieldCheck, ShieldAlert, EyeOff, Download, Upload } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useAppState } from '../context/AppStateContext';
 import type { ThemeType, PrivacyMode } from '../types';
@@ -17,11 +20,70 @@ const AVAILABLE_THEMES: { id: ThemeType; label: string }[] = [
 
 export const SettingsView: React.FC = () => {
   const { theme, tStyle, isLight, handleThemeChange: onThemeSelect, privacySettings: privacy, setPrivacySettings: setPrivacy } = useAppState();
-  const { currentUser, logout, deleteAccount, enrollBiometrics, removeBiometrics } = useAuth();
+  const { currentUser, logout, deleteAccount, enrollBiometrics, removeBiometrics, exportUserData, importUserData } = useAuth();
   const [fidoStatus, setFidoStatus] = useState<string>('');
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [backupStatus, setBackupStatus] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!currentUser) return null;
+
+  const handleExport = async () => {
+    const payload = exportUserData(currentUser.id);
+    const json = JSON.stringify(payload, null, 2);
+    const safeName = currentUser.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const filename = `eros-backup-${safeName}-${new Date().toISOString().slice(0, 10)}.json`;
+
+    // Android's WebView doesn't support <a download> blob saves like a real browser does,
+    // so on-device we write to app cache and hand off to the native share sheet instead.
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const { uri } = await Filesystem.writeFile({
+          path: filename,
+          data: json,
+          directory: Directory.Cache,
+          encoding: Encoding.UTF8
+        });
+        await Share.share({
+          title: 'Eros Budget Backup',
+          text: `Backup for ${currentUser.name}`,
+          url: uri,
+          dialogTitle: 'Save or share your backup file'
+        });
+      } catch {
+        setBackupStatus('Export failed — could not save the backup file.');
+        setTimeout(() => setBackupStatus(''), 6000);
+      }
+      return;
+    }
+
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportClick = () => fileInputRef.current?.click();
+
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const payload = JSON.parse(text);
+      const profile = importUserData(payload);
+      setBackupStatus(`Restored "${profile.name}". Log out and sign back in to view the restored profile.`);
+    } catch {
+      setBackupStatus('Import failed: invalid or corrupted backup file.');
+    }
+    setTimeout(() => setBackupStatus(''), 6000);
+  };
 
   const handleEnroll = async () => {
     setFidoStatus('Awaiting biometrics...');
@@ -126,6 +188,31 @@ export const SettingsView: React.FC = () => {
         {confirmDelete && (
           <div style={{ fontSize: '9px', color: tStyle.colors.neg, textAlign: 'center', marginTop: '2px' }}>
             WARNING: THIS COMPLETELY DESTROYS DATA BINDINGS AND LOCAL STORAGE KEYS.
+          </div>
+        )}
+      </div>
+
+      {/* DATA BACKUP / RESTORE */}
+      <div style={{ fontSize: '11px', color: tStyle.colors.secondary, letterSpacing: '2px', fontWeight: 'bold', marginTop: '16px', borderBottom: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.1)', paddingBottom: '6px', fontFamily: getLabelFontFamily(theme) }}>
+        DATA BACKUP
+      </div>
+      <div style={boxStyle}>
+        <div style={{ fontSize: '10px', color: tStyle.colors.secondary, fontFamily: getLabelFontFamily(theme), lineHeight: 1.4 }}>
+          Export a full backup of this profile (ledger, food, savings, debt, goals, theme) as a JSON file, or restore one from a previous backup.
+        </div>
+        <button onClick={handleExport} style={buttonStyle}>
+          <Download size={14} /> EXPORT MY DATA
+        </button>
+        <button
+          onClick={handleImportClick}
+          style={{ ...buttonStyle, backgroundColor: tStyle.colors.metricBg, color: tStyle.colors.primary, border: `1px solid ${tStyle.colors.secondary}33` }}
+        >
+          <Upload size={14} /> IMPORT BACKUP FILE
+        </button>
+        <input ref={fileInputRef} type="file" accept="application/json,.json" style={{ display: 'none' }} onChange={handleImportFile} />
+        {backupStatus && (
+          <div style={{ fontSize: '10px', color: tStyle.colors.pos, textAlign: 'center', fontFamily: getLabelFontFamily(theme) }}>
+            {backupStatus}
           </div>
         )}
       </div>

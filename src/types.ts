@@ -126,6 +126,15 @@ export type UserProfile = {
   createdAt: string;
 };
 
+// Full backup/restore payload for a single user profile, downloadable as JSON from Settings.
+// pinHash is exported (not the raw PIN, which is never stored), so the same PIN works after restore.
+export type ExportedUserData = {
+  version: 1;
+  exportedAt: string;
+  profile: UserProfile;
+  ledger: GlobalLedger;
+};
+
 export type FoodModalState = {
   isOpen: boolean;
   mode: 'add' | 'edit';

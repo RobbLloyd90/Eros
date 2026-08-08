@@ -2,10 +2,11 @@ import React, { createContext, useContext, useState } from 'react';
 import { db } from '../storage/database';
 import { WebAuthnAPI } from '../utils/webauthn';
 import { useLoadUsersEffect } from '../useEffects/useAuthEffects';
-import type { UserProfile, ThemeType, ChartConfig } from '../types';
+import type { UserProfile, ThemeType, ChartConfig, ExportedUserData } from '../types';
 
 interface AuthContextType {
   users: Record<string, UserProfile>;
+  usersLoaded: boolean;
   currentUser: UserProfile | null;
   isAuthenticated: boolean;
   loginWithPin: (userId: string, pin: string) => boolean;
@@ -17,6 +18,8 @@ interface AuthContextType {
   removeBiometrics: () => void;
   updateTheme: (theme: ThemeType) => void;
   updateCharts: (charts: ChartConfig[]) => void;
+  exportUserData: (userId: string) => ExportedUserData;
+  importUserData: (payload: unknown) => UserProfile;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -60,11 +63,12 @@ if (import.meta.env.DEV && (!existingData || Object.keys(existingData).length ==
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [users, setUsers] = useState<Record<string, UserProfile>>({});
+  const [usersLoaded, setUsersLoaded] = useState(false);
   // Dev-only auto-login convenience; production/Android builds always start at the real lock screen.
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(import.meta.env.DEV ? DEV_USER : null);
   const [isAuthenticated, setIsAuthenticated] = useState(import.meta.env.DEV);
 
-  useLoadUsersEffect(setUsers);
+  useLoadUsersEffect(setUsers, setUsersLoaded);
 
   const loginWithPin = (userId: string, pin: string) => {
     const user = users[userId];
@@ -154,10 +158,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCurrentUser(updatedUser);
   };
 
+  const exportUserData = (userId: string) => db.exportUser(userId);
+
+  const importUserData = (payload: unknown) => {
+    const profile = db.importUser(payload);
+    setUsers(db.getUsers());
+    return profile;
+  };
+
   return (
     <AuthContext.Provider
       value={{
         users,
+        usersLoaded,
         currentUser,
         isAuthenticated,
         loginWithPin,
@@ -168,7 +181,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         enrollBiometrics,
         removeBiometrics,
         updateTheme,
-        updateCharts
+        updateCharts,
+        exportUserData,
+        importUserData
       }}
     >
       {children}

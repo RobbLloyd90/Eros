@@ -4,14 +4,17 @@ import { useAuth } from '../context/AuthContext';
 import { GlobalStyles } from './GlobalStyles';
 
 export const LockScreen: React.FC = () => {
-  const { users, loginWithPin, loginWithBiometrics, registerUser } = useAuth();
+  const { users, usersLoaded, loginWithPin, loginWithBiometrics, registerUser } = useAuth();
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [pin, setPin] = useState('');
-  const [isCreating, setIsCreating] = useState(Object.keys(users).length === 0);
+  // null = not yet manually toggled; falls back to "no saved users" once loaded.
+  // Avoids flashing the create-user screen for existing users while storage is still loading.
+  const [manualIsCreating, setManualIsCreating] = useState<boolean | null>(null);
   const [newName, setNewName] = useState('');
   const [error, setError] = useState('');
 
   const userList = Object.values(users);
+  const isCreating = manualIsCreating ?? userList.length === 0;
 
   const handlePinSubmit = () => {
     if (!selectedUser) return;
@@ -25,9 +28,28 @@ export const LockScreen: React.FC = () => {
       return;
     }
     // Fixed initialization assignment logic to default to aero_g3
-    const newUser = registerUser(newName, pin, 'aero_g3');
-    loginWithPin(newUser.id, pin);
+    registerUser(newName, pin, 'aero_g3');
+    setNewName('');
+    setPin('');
+    setError('');
+    // Return to the sign-in list so the new profile must be explicitly signed into, not auto-logged in.
+    setManualIsCreating(false);
   };
+
+  if (!usersLoaded) {
+    return (
+      <div
+        style={{
+          height: '100vh',
+          width: '100vw',
+          backgroundColor: '#060706',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      />
+    );
+  }
 
   return (
     <div
@@ -128,7 +150,7 @@ export const LockScreen: React.FC = () => {
             </button>
             {userList.length > 0 && (
               <button
-                onClick={() => setIsCreating(false)}
+                onClick={() => setManualIsCreating(false)}
                 style={{
                   background: 'none',
                   border: 'none',
@@ -171,7 +193,7 @@ export const LockScreen: React.FC = () => {
               </button>
             ))}
             <button
-              onClick={() => setIsCreating(true)}
+              onClick={() => setManualIsCreating(true)}
               style={{
                 backgroundColor: 'transparent',
                 border: '1px dashed rgba(255, 255, 255, 0.3)',
