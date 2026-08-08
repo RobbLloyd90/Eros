@@ -8,6 +8,9 @@ import type {
   FoodEntry,
   PrivacySettings,
   Entry,
+  SavingsEntry,
+  DebtEntry,
+  ModalState,
   ChartModalState,
   DeleteChartModalState
 } from '../types';
@@ -35,8 +38,8 @@ export interface AppStateValue {
   setDeleteChartModal: React.Dispatch<React.SetStateAction<DeleteChartModalState>>;
   openEditFood: (food: FoodEntry) => void;
   handleRemoveFood: (id: string) => void;
-  openEditEntry: (bladeId: string, entry: Entry) => void;
-  handleRemoveEntry: (bladeId: string, id: string) => void;
+  openEditEntry: (bladeId: ModalState['bladeId'], entry: Entry | SavingsEntry | DebtEntry) => void;
+  handleRemoveEntry: (bladeId: 'inflows' | 'outflows' | 'savings' | 'debt', id: string) => void;
   openEditGoal: (goal: Goal) => void;
   privacySettings: PrivacySettings;
   setPrivacySettings: (p: PrivacySettings) => void;

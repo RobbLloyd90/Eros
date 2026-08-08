@@ -1,11 +1,11 @@
 import React from 'react';
-import type { ModalState, Entry, ThemeType } from '../../types';
+import type { ModalState, SavingsEntry, ThemeType } from '../../types';
 import { getLabelFontFamily } from '../../utils/themeUtils';
 
 interface GoalSectionProps {
   modal: ModalState;
   setModal: React.Dispatch<React.SetStateAction<ModalState>>;
-  savingsData: Entry[];
+  savingsData: SavingsEntry[];
   theme: ThemeType;
   isLight: boolean;
   tStyle: any;

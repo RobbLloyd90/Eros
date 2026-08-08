@@ -1,16 +1,16 @@
 import React from 'react';
 import { Pencil, X } from 'lucide-react';
-import type { Entry, ThemeType } from '../types';
+import type { Entry, SavingsEntry, DebtEntry, ThemeType } from '../types';
 import { getLabelFontFamily, isNothingTheme } from '../utils/themeUtils';
 
 interface EntryRowProps {
-  bladeId: string;
-  entry: Entry;
+  bladeId: 'inflows' | 'outflows' | 'savings' | 'debt' | 'goals';
+  entry: Entry | SavingsEntry | DebtEntry;
   theme: ThemeType;
   tStyle: any;
   isLight: boolean;
-  onEdit: (bladeId: string, entry: Entry) => void;
-  onRemove: (bladeId: string, id: string) => void;
+  onEdit: (bladeId: 'inflows' | 'outflows' | 'savings' | 'debt' | 'goals', entry: Entry | SavingsEntry | DebtEntry) => void;
+  onRemove: (bladeId: any, id: string) => void;
 }
 
 export const EntryRow: React.FC<EntryRowProps> = ({ bladeId, entry, theme, tStyle, isLight, onEdit, onRemove }) => {
@@ -23,9 +23,10 @@ export const EntryRow: React.FC<EntryRowProps> = ({ bladeId, entry, theme, tStyl
     };
 
     if (bladeId === 'savings') {
-      const bal = entry.currentBalance || 0;
-      const cont = entry.contribution || 0;
-      const int = entry.interestEarned || 0;
+      const s = entry as SavingsEntry;
+      const bal = s.currentBalance || 0;
+      const cont = s.contribution || 0;
+      const int = s.interestEarned || 0;
       const total = bal + cont + int;
       return (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
@@ -33,16 +34,17 @@ export const EntryRow: React.FC<EntryRowProps> = ({ bladeId, entry, theme, tStyl
           <span style={boxStyle}>CONT: £{cont.toFixed(2)}</span>
           <span style={boxStyle}>INT: £{int.toFixed(2)}</span>
           <span style={{ ...boxStyle, color: tStyle.colors.pos }}>TOT: £{total.toFixed(2)}</span>
-          <span style={{ ...boxStyle, opacity: 0.7 }}>RATE: {entry.interestRate || 0}%</span>
+          <span style={{ ...boxStyle, opacity: 0.7 }}>RATE: {s.interestRate || 0}%</span>
         </div>
       );
     }
 
     if (bladeId === 'debt') {
-      const bal = entry.currentBalance || 0;
-      const min = entry.minimumPayment || 0;
-      const act = entry.actualPayment || 0;
-      const accrued = entry.interestAccrued || 0;
+      const d = entry as DebtEntry;
+      const bal = d.currentBalance || 0;
+      const min = d.minimumPayment || 0;
+      const act = d.actualPayment || 0;
+      const accrued = d.interestAccrued || 0;
       const newBal = bal + accrued - act;
       const extra = act - min;
       return (
@@ -59,8 +61,9 @@ export const EntryRow: React.FC<EntryRowProps> = ({ bladeId, entry, theme, tStyl
       );
     }
 
-    const exp = entry.expected || 0;
-    const act = entry.actual || 0;
+    const flow = entry as Entry;
+    const exp = flow.expected || 0;
+    const act = flow.actual || 0;
     const diff = exp - act;
     return (
       <div style={{ display: 'flex', gap: '10px' }}>
@@ -83,7 +86,7 @@ export const EntryRow: React.FC<EntryRowProps> = ({ bladeId, entry, theme, tStyl
         </div>
 
         {/* NEW: DYNAMIC CATEGORY BADGE INVERSION SUB-ROW */}
-        {entry.category && (bladeId === 'inflows' || bladeId === 'outflows') && (
+        {(entry as Entry).category && (bladeId === 'inflows' || bladeId === 'outflows') && (
           <div
             style={{
               fontSize: '10px',
@@ -94,7 +97,7 @@ export const EntryRow: React.FC<EntryRowProps> = ({ bladeId, entry, theme, tStyl
               fontFamily: getLabelFontFamily(theme)
             }}
           >
-            {entry.category.toUpperCase()}
+            {(entry as Entry).category!.toUpperCase()}
           </div>
         )}
 

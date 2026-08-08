@@ -5,30 +5,50 @@ export type RecurringProfile = {
   fortnightStartWeek?: 1 | 2; // Which week does their fortnightly cycle begin?
 };
 
+export type ExpenseTag = 'fixed' | 'fluid';
+export type PaymentMethod = 'Debit/Cash' | 'Credit';
+// Presets shown in the food-category picker; the UI also allows a free-typed custom category.
+export type SavingsCategory = 'Stocks/Shares' | 'Lifetime ISA' | 'Digital Regular Saver' | 'Savings Account' | 'Pension';
+
+// Inflow/outflow entries only. Savings and debt have their own dedicated shapes below.
 export type Entry = {
   id: string;
   name: string;
-  tag?: 'fixed' | 'fluid';
+  tag?: ExpenseTag;
   category?: string;
-  
-  // --- NEW: Recurring Engine Fields ---
+
+  // --- Recurring Engine Fields ---
   isRecurring?: boolean;
   recurringProfile?: RecurringProfile;
 
-  // Flow Fields (In/Out)
   expected?: number;
   actual?: number;
-  // Savings Fields
-  interestRate?: number;
-  contribution?: number;
+};
+
+export type SavingsEntry = {
+  id: string;
+  name: string;
+  category?: SavingsCategory;
   currentBalance?: number;
+  contribution?: number;
+  interestRate?: number;
   interestEarned?: number;
-  // Debt Fields
+  // Reused as "non-fixed interest" toggle in the savings entry UI.
+  isRecurring?: boolean;
+};
+
+export type DebtEntry = {
+  id: string;
+  name: string;
+  currentBalance?: number;
+  interestRate?: number;
   minimumPayment?: number;
   actualPayment?: number;
   interestAccrued?: number;
 };
 
+// A goal can pull from multiple savings accounts (e.g. a house deposit fed by a LISA + a regular savings account);
+// the saved amount is computed on demand from `linkedSavings`, not cached on the goal itself.
 export type Goal = { id: string; name: string; targetAmount: number; targetDate: string; linkedSavings: string[] };
 
 export type FoodEntry = {
@@ -36,12 +56,12 @@ export type FoodEntry = {
   category: string;
   store: string;
   item: string;
-  method: 'Debit/Cash' | 'Credit';
+  method: PaymentMethod;
   price: number;
   date: string;
 };
 
-export type BladeData = { inflows: Entry[]; outflows: Entry[]; savings: Entry[]; debt: Entry[]; [key: string]: Entry[] };
+export type BladeData = { inflows: Entry[]; outflows: Entry[]; savings: SavingsEntry[]; debt: DebtEntry[] };
 export type MonthlyLedger = { data: BladeData; goals: Goal[]; food: FoodEntry[] };
 export type GlobalLedger = Record<string, MonthlyLedger>;
 
@@ -51,10 +71,10 @@ export type ModalState = {
   isOpen: boolean;
   mode: 'add' | 'edit';
   isGoal: boolean;
-  bladeId: string;
+  bladeId: 'inflows' | 'outflows' | 'savings' | 'debt' | 'goals';
   id: string | null;
   name: string;
-  tag: 'fixed' | 'fluid';
+  tag: ExpenseTag;
   targetAmount: string;
   targetDate: string;
   linkedSavings: string[];
@@ -92,10 +112,11 @@ export type FoodModalState = {
   category: string;
   store: string;
   item: string;
-  method: 'Debit/Cash' | 'Credit';
+  method: PaymentMethod;
   price: string;
   date: string;
 };
+
 
 export type ChartType = 'pie' | 'bar' | 'line';
 export type ChartSource = 'food' | 'outflows' | 'inflows' | 'netWorth' | 'inflows_trend' | 'outflows_trend' | 'food_trend' | 'savings_trend' | 'debt_trend' | 'goal_trend';

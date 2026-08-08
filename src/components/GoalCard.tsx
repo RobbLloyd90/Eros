@@ -1,12 +1,12 @@
 import React from 'react';
 import { Pencil, Calendar, Target, Check, TrendingUp } from 'lucide-react';
-import type { Goal, Entry, ThemeType } from '../types';
+import type { Goal, SavingsEntry, ThemeType } from '../types';
 import { isNothingTheme, getLabelFontFamily } from '../utils/themeUtils';
 
 interface GoalCardProps {
   goal: Goal;
   config: any;
-  savingsData: Entry[];
+  savingsData: SavingsEntry[];
   theme: ThemeType;
   tStyle: any;
   isLight: boolean;

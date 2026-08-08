@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { ThemeType, ModalState, FoodModalState, ChartModalState, ChartConfig, Entry, Goal, FoodEntry, PrivacySettings } from './types';
+import type { ThemeType, ModalState, FoodModalState, ChartModalState, ChartConfig, Entry, SavingsEntry, DebtEntry, Goal, FoodEntry, PrivacySettings } from './types';
 import { getThemeStyles } from './theme';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { useLedgerData } from './hooks/useLedgerData';
@@ -75,27 +75,30 @@ const MainApp = () => {
     }
   };
 
-  const openEditEntry = (bladeId: string, entry: Entry) => setModal(prev => (
+  const openEditEntry = (bladeId: ModalState['bladeId'], entry: Entry | SavingsEntry | DebtEntry) => {
+    const e = entry as Entry & SavingsEntry & DebtEntry;
+    return setModal(prev => (
     {
       ...prev,
       isOpen: true,
       mode: 'edit',
       isGoal: false,
       bladeId,
-      id: entry.id,
-      name: entry.name,
-      expected: entry.expected?.toString() || '',
-      actual: entry.actual?.toString() || '',
-      tag: entry.tag || 'fixed',
-      interestRate: entry.interestRate?.toString() || '',
-      contribution: entry.contribution?.toString() || '',
-      currentBalance: entry.currentBalance?.toString() || '',
-      interestEarned: entry.interestEarned?.toString() || '',
-      minimumPayment: entry.minimumPayment?.toString() || '',
-      actualPayment: entry.actualPayment?.toString() || '',
-      interestAccrued: entry.interestAccrued?.toString() || '',
-      category: entry.category || '' 
+      id: e.id,
+      name: e.name,
+      expected: e.expected?.toString() || '',
+      actual: e.actual?.toString() || '',
+      tag: e.tag || 'fixed',
+      interestRate: e.interestRate?.toString() || '',
+      contribution: e.contribution?.toString() || '',
+      currentBalance: e.currentBalance?.toString() || '',
+      interestEarned: e.interestEarned?.toString() || '',
+      minimumPayment: e.minimumPayment?.toString() || '',
+      actualPayment: e.actualPayment?.toString() || '',
+      interestAccrued: e.interestAccrued?.toString() || '',
+      category: e.category || '' 
     }));
+  };
 
   const openEditGoal = (goal: Goal) => setModal(prev => (
     {

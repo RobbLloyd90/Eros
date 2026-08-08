@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { GlobalLedger, UserProfile, ModalState, FoodModalState, Goal, Entry, FoodEntry } from '../types';
+import type { GlobalLedger, UserProfile, ModalState, FoodModalState, Goal, Entry, SavingsEntry, DebtEntry, FoodEntry } from '../types';
 import { 
   useCurrentUserEffect, 
   useTrackingEngineEffect, 
@@ -42,15 +42,40 @@ export const useLedgerData = (currentUser: UserProfile | null) => {
         const monthData = prev[activeMonthKey] || { data: { inflows: [], outflows: [], savings: [], debt: [] }, goals: [], food: [] };
         return { ...prev, [activeMonthKey]: { ...monthData, goals: modal.mode === 'add' ? [...monthData.goals, goalToSave] : monthData.goals.map((g) => (g.id === modal.id ? goalToSave : g)) } };
       });
-    } else {
-      const entryToSave: Entry = {
-        id: modal.mode === 'add' ? Date.now().toString() : modal.id!, name: modal.name, expected: parseFloat(modal.expected) || 0, actual: parseFloat(modal.actual) || 0,
-        interestRate: parseFloat(modal.interestRate) || 0, contribution: parseFloat(modal.contribution) || 0, currentBalance: parseFloat(modal.currentBalance) || 0, interestEarned: parseFloat(modal.interestEarned) || 0, minimumPayment: parseFloat(modal.minimumPayment) || 0, actualPayment: parseFloat(modal.actualPayment) || 0, interestAccrued: parseFloat(modal.interestAccrued) || 0, category: modal.category || undefined, ...(modal.bladeId === 'outflows' && { tag: modal.tag })
+    } else if (modal.bladeId === 'savings') {
+      const entryToSave: SavingsEntry = {
+        id: modal.mode === 'add' ? Date.now().toString() : modal.id!, name: modal.name,
+        currentBalance: parseFloat(modal.currentBalance) || 0, contribution: parseFloat(modal.contribution) || 0,
+        interestRate: parseFloat(modal.interestRate) || 0, interestEarned: parseFloat(modal.interestEarned) || 0,
+        isRecurring: modal.isRecurring
       };
       setLedger((prev) => {
         const monthData = prev[activeMonthKey] || { data: { inflows: [], outflows: [], savings: [], debt: [] }, goals: [], food: [] };
-        const updatedBlade = modal.mode === 'add' ? [...(monthData.data[modal.bladeId] || []), entryToSave] : (monthData.data[modal.bladeId] || []).map((e) => (e.id === modal.id ? entryToSave : e));
-        return { ...prev, [activeMonthKey]: { ...monthData, data: { ...monthData.data, [modal.bladeId]: updatedBlade } } };
+        const updated = modal.mode === 'add' ? [...monthData.data.savings, entryToSave] : monthData.data.savings.map((e) => (e.id === modal.id ? entryToSave : e));
+        return { ...prev, [activeMonthKey]: { ...monthData, data: { ...monthData.data, savings: updated } } };
+      });
+    } else if (modal.bladeId === 'debt') {
+      const entryToSave: DebtEntry = {
+        id: modal.mode === 'add' ? Date.now().toString() : modal.id!, name: modal.name,
+        currentBalance: parseFloat(modal.currentBalance) || 0, interestRate: parseFloat(modal.interestRate) || 0,
+        minimumPayment: parseFloat(modal.minimumPayment) || 0, actualPayment: parseFloat(modal.actualPayment) || 0,
+        interestAccrued: parseFloat(modal.interestAccrued) || 0
+      };
+      setLedger((prev) => {
+        const monthData = prev[activeMonthKey] || { data: { inflows: [], outflows: [], savings: [], debt: [] }, goals: [], food: [] };
+        const updated = modal.mode === 'add' ? [...monthData.data.debt, entryToSave] : monthData.data.debt.map((e) => (e.id === modal.id ? entryToSave : e));
+        return { ...prev, [activeMonthKey]: { ...monthData, data: { ...monthData.data, debt: updated } } };
+      });
+    } else {
+      const bladeId = modal.bladeId as 'inflows' | 'outflows';
+      const entryToSave: Entry = {
+        id: modal.mode === 'add' ? Date.now().toString() : modal.id!, name: modal.name, expected: parseFloat(modal.expected) || 0, actual: parseFloat(modal.actual) || 0,
+        category: modal.category || undefined, ...(bladeId === 'outflows' && { tag: modal.tag })
+      };
+      setLedger((prev) => {
+        const monthData = prev[activeMonthKey] || { data: { inflows: [], outflows: [], savings: [], debt: [] }, goals: [], food: [] };
+        const updated = modal.mode === 'add' ? [...monthData.data[bladeId], entryToSave] : monthData.data[bladeId].map((e) => (e.id === modal.id ? entryToSave : e));
+        return { ...prev, [activeMonthKey]: { ...monthData, data: { ...monthData.data, [bladeId]: updated } } };
       });
     }
   };
@@ -64,10 +89,11 @@ export const useLedgerData = (currentUser: UserProfile | null) => {
     });
   };
 
-  const handleRemoveEntry = (bladeId: string, id: string) => {
+  const handleRemoveEntry = (bladeId: 'inflows' | 'outflows' | 'savings' | 'debt', id: string) => {
     setLedger((prev) => {
       if (!prev[activeMonthKey]) return prev;
-      return { ...prev, [activeMonthKey]: { ...prev[activeMonthKey], data: { ...prev[activeMonthKey].data, [bladeId]: prev[activeMonthKey].data[bladeId].filter((e) => e.id !== id) } } };
+      const updated = (prev[activeMonthKey].data[bladeId] as Array<{ id: string }>).filter((e) => e.id !== id);
+      return { ...prev, [activeMonthKey]: { ...prev[activeMonthKey], data: { ...prev[activeMonthKey].data, [bladeId]: updated } } };
     });
   };
 

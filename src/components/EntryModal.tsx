@@ -1,6 +1,6 @@
 import React from 'react';
 import { X } from 'lucide-react';
-import type { ThemeType, ModalState, Entry } from '../types';
+import type { ThemeType, ModalState, SavingsEntry } from '../types';
 import { BLADE_CONFIG } from '../config';
 import { ModalBackdrop } from './ModalBackdrop';
 import { CategoryPicker } from './entryModal/CategoryPicker';
@@ -17,7 +17,7 @@ interface EntryModalProps {
   theme: ThemeType;
   tStyle: any;
   isLight: boolean;
-  savingsData: Entry[];
+  savingsData: SavingsEntry[];
   handleModalSave: () => void;
 }
 
@@ -81,7 +81,7 @@ export const EntryModal: React.FC<EntryModalProps> = ({
           style={inputStyle}
           value={modal.bladeId}
           onChange={(e) =>
-            setModal({ ...modal, bladeId: e.target.value, isGoal: e.target.value === 'goals', category: '' })
+            setModal({ ...modal, bladeId: e.target.value as ModalState['bladeId'], isGoal: e.target.value === 'goals', category: '' })
           }
           disabled={modal.mode === 'edit'}
         >

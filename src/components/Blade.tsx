@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import type { ThemeType, Entry, Goal, BladeData } from '../types';
+import type { ThemeType, Entry, SavingsEntry, DebtEntry, Goal, BladeData } from '../types';
 import { TAB_HEIGHT } from '../config';
 import { EntryRow } from './EntryRow';
 import { GoalCard } from './GoalCard';
@@ -18,8 +18,8 @@ interface BladeProps {
   theme: ThemeType;
   tStyle: any;
   isLight: boolean;
-  openEditEntry: (bladeId: string, entry: Entry) => void;
-  handleRemoveEntry: (bladeId: string, id: string) => void;
+  openEditEntry: (bladeId: 'inflows' | 'outflows' | 'savings' | 'debt' | 'goals', entry: Entry | SavingsEntry | DebtEntry) => void;
+  handleRemoveEntry: (bladeId: 'inflows' | 'outflows' | 'savings' | 'debt', id: string) => void;
   openEditGoal: (goal: Goal) => void;
 }
 
@@ -39,15 +39,28 @@ export const Blade: React.FC<BladeProps> = ({
   handleRemoveEntry,
   openEditGoal
 }) => {
-  const bladeEntries = data[config.id] || [];
+  const getBladeEntries = (bladeId: string): (Entry | SavingsEntry | DebtEntry)[] => {
+    switch (bladeId) {
+      case 'inflows': return data.inflows;
+      case 'outflows': return data.outflows;
+      case 'savings': return data.savings;
+      case 'debt': return data.debt;
+      default: return [];
+    }
+  };
+  const bladeEntries = getBladeEntries(config.id);
 
   const totalActual = bladeEntries.reduce((sum, e) => {
-    if (config.id === 'savings') return sum + (e.currentBalance || 0) + (e.contribution || 0) + (e.interestEarned || 0);
-    if (config.id === 'debt') {
-      const accrued = ((e.currentBalance || 0) * ((e.interestRate || 0) / 100)) / 12;
-      return sum + ((e.currentBalance || 0) + accrued - (e.actualPayment || 0));
+    if (config.id === 'savings') {
+      const s = e as SavingsEntry;
+      return sum + (s.currentBalance || 0) + (s.contribution || 0) + (s.interestEarned || 0);
     }
-    return sum + (e.actual || 0);
+    if (config.id === 'debt') {
+      const d = e as DebtEntry;
+      const accrued = ((d.currentBalance || 0) * ((d.interestRate || 0) / 100)) / 12;
+      return sum + ((d.currentBalance || 0) + accrued - (d.actualPayment || 0));
+    }
+    return sum + ((e as Entry).actual || 0);
   }, 0);
 
   return (
@@ -157,7 +170,7 @@ export const Blade: React.FC<BladeProps> = ({
                       ))}
                   </>
                 ) : (
-                  data[config.id]?.map((e) => (
+                  getBladeEntries(config.id).map((e) => (
                     <EntryRow
                       key={e.id}
                       bladeId={config.id}
