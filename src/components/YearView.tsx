@@ -1,18 +1,16 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { MONTH_NAMES } from '../config';
-import type { ThemeType, GlobalLedger } from '../types';
+import { useAppState } from '../context/AppStateContext';
+import { getLabelFontFamily } from '../utils/themeUtils';
 
-interface YearViewProps {
-  currentYear: number;
-  ledger: GlobalLedger;
-  theme: ThemeType;
-  tStyle: any;
-  isLight: boolean;
-  onSelectMonth: (monthIndex: number) => void;
-}
+export const YearView: React.FC = () => {
+  const { currentYear, ledger, theme, tStyle, setCurrentMonth, setView } = useAppState();
+  const onSelectMonth = (monthIndex: number) => {
+    setCurrentMonth(monthIndex);
+    setView('month');
+  };
 
-export const YearView: React.FC<YearViewProps> = ({ currentYear, ledger, theme, tStyle, isLight, onSelectMonth }) => {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -53,7 +51,7 @@ export const YearView: React.FC<YearViewProps> = ({ currentYear, ledger, theme, 
                 fontSize: '16px',
                 fontWeight: 'bold',
                 color: tStyle.colors.primary,
-                fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit'
+                fontFamily: getLabelFontFamily(theme)
               }}
             >
               {month}
@@ -64,7 +62,7 @@ export const YearView: React.FC<YearViewProps> = ({ currentYear, ledger, theme, 
                   fontSize: '9px',
                   color: tStyle.colors.pos,
                   marginTop: '4px',
-                  fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit'
+                  fontFamily: getLabelFontFamily(theme)
                 }}
               >
                 ACTIVE

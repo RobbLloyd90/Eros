@@ -1,5 +1,6 @@
 import React from 'react';
 import type { ThemeType, ChartDataPoint } from '../../types';
+import { getLabelFontFamily } from '../../utils/themeUtils';
 
 interface CustomPieChartProps {
   data: ChartDataPoint[];
@@ -78,7 +79,7 @@ export const CustomPieChart: React.FC<CustomPieChartProps> = ({ data, theme, tSt
               alignItems: 'center',
               justifyContent: 'space-between',
               fontSize: '11px',
-              fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit'
+              fontFamily: getLabelFontFamily(theme)
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden' }}>

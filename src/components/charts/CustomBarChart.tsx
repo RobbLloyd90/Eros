@@ -1,5 +1,6 @@
 import React from 'react';
 import type { ThemeType, ChartDataPoint } from '../../types';
+import { getLabelFontFamily } from '../../utils/themeUtils';
 
 interface CustomBarChartProps {
   data: ChartDataPoint[];
@@ -68,7 +69,7 @@ export const CustomBarChart: React.FC<CustomBarChartProps> = ({ data, theme, tSt
                   fontSize: '9px',
                   color: tStyle.colors.primary,
                   fontWeight: 'bold',
-                  fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit'
+                  fontFamily: getLabelFontFamily(theme)
                 }}
               >
                 £{bar.value.toFixed(0)}
@@ -100,7 +101,7 @@ export const CustomBarChart: React.FC<CustomBarChartProps> = ({ data, theme, tSt
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
-              fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit'
+              fontFamily: getLabelFontFamily(theme)
             }}
           >
             {bar.label.substring(0, 5).toUpperCase()}

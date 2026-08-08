@@ -1,5 +1,6 @@
 import React from 'react';
 import type { ThemeType, FoodEntry } from '../../types';
+import { getLabelFontFamily } from '../../utils/themeUtils';
 
 interface FoodPieChartProps {
   foodEntries: FoodEntry[];
@@ -19,7 +20,7 @@ export const FoodPieChart: React.FC<FoodPieChartProps> = ({ foodEntries, theme, 
           justifyContent: 'center',
           color: tStyle.colors.secondary,
           fontSize: '11px',
-          fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit'
+          fontFamily: getLabelFontFamily(theme)
         }}
       >
         NO DATA TO VISUALIZE
@@ -112,7 +113,7 @@ export const FoodPieChart: React.FC<FoodPieChartProps> = ({ foodEntries, theme, 
               alignItems: 'center',
               justifyContent: 'space-between',
               fontSize: '11px',
-              fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit'
+              fontFamily: getLabelFontFamily(theme)
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>

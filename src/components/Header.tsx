@@ -1,7 +1,8 @@
 import React from 'react';
-import { Settings, Plus, ChevronLeft, Home, ChevronUp, LucideChevronUpCircle, LucideAArrowUp } from 'lucide-react';
+import { Settings, Plus, Home, LucideChevronUpCircle } from 'lucide-react';
 import type { ThemeType } from '../types';
 import { MONTH_NAMES } from '../config';
+import { getLabelFontFamily } from '../utils/themeUtils';
 
 interface HeaderProps {
   theme: ThemeType;
@@ -69,7 +70,7 @@ export const Header: React.FC<HeaderProps> = ({
               letterSpacing: '2px',
               fontWeight: 'bold',
               fontSize: '11px',
-              fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit'
+              fontFamily: getLabelFontFamily(theme)
             }}
           >
             {displayTitle}
@@ -124,7 +125,7 @@ export const Header: React.FC<HeaderProps> = ({
               letterSpacing: '1px',
               marginBottom: '4px',
               fontWeight: isLight ? 700 : 'normal',
-              fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit'
+              fontFamily: getLabelFontFamily(theme)
             }}
           >
             Budget Remaing [{currentMonthName}]
@@ -148,7 +149,7 @@ export const Header: React.FC<HeaderProps> = ({
               letterSpacing: '1px',
               marginBottom: '4px',
               fontWeight: isLight ? 700 : 'normal',
-              fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit'
+              fontFamily: getLabelFontFamily(theme)
             }}
           >
           </div>

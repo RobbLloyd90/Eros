@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pencil, X } from 'lucide-react';
 import type { Entry, ThemeType } from '../types';
+import { getLabelFontFamily, isNothingTheme } from '../utils/themeUtils';
 
 interface EntryRowProps {
   bladeId: string;
@@ -90,7 +91,7 @@ export const EntryRow: React.FC<EntryRowProps> = ({ bladeId, entry, theme, tStyl
               letterSpacing: '1px',
               marginBottom: '6px',
               fontWeight: 'bold',
-              fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit'
+              fontFamily: getLabelFontFamily(theme)
             }}
           >
             {entry.category.toUpperCase()}
@@ -101,7 +102,7 @@ export const EntryRow: React.FC<EntryRowProps> = ({ bladeId, entry, theme, tStyl
           style={{
             fontSize: '10px',
             color: tStyle.colors.secondary,
-            fontFamily: theme.includes('nothing')
+            fontFamily: isNothingTheme(theme)
               ? "'DotGothic16', sans-serif"
               : theme === 'aero_g3'
                 ? 'inherit'

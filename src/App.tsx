@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import type { ThemeType, ModalState, FoodModalState, ChartModalState, ChartConfig, Entry, Goal, FoodEntry, PrivacySettings } from './types';
 import { getThemeStyles } from './theme';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { useLedgerData } from './hooks/useLedgerData';
+import { AppStateProvider, type AppView } from './context/AppStateContext';
 
 import { GlobalStyles } from './components/GlobalStyles';
 import { LiquidBackground } from './components/LiquidBackground';
@@ -16,7 +17,7 @@ const MainApp = () => {
   const { ledger, currentYear, setCurrentYear, currentMonth, setCurrentMonth, activeMonthKey, activeGoals, activeFood, activeData, handleModalSave, handleFoodSave, handleRemoveEntry, handleRemoveFood } = useLedgerData(currentUser);
 
   const [theme, setTheme] = useState<ThemeType>(currentUser?.theme || 'aero_g3');
-  const [view, setView] = useState<'dashboard' | 'year' | 'month' | 'food' | 'settings'>('dashboard');
+  const [view, setView] = useState<AppView>('dashboard');
   const [charts, setCharts] = useState<ChartConfig[]>([]);
 
   // Modal States
@@ -34,7 +35,7 @@ const MainApp = () => {
   }, [currentUser]);
 
   const handleThemeChange = (newTheme: ThemeType) => { setTheme(newTheme); updateTheme(newTheme); };
-5
+
   const handleOpenAddModal = () => {
     if (view === 'food') { setFoodModal(prev => (
       {
@@ -180,7 +181,6 @@ const MainApp = () => {
           
           <Header
           theme={theme}
-          setTheme={handleThemeChange}
           isLight={isLight}
           tStyle={tStyle}
           currentView={view as any}
@@ -192,32 +192,36 @@ const MainApp = () => {
           openAddModal={handleOpenAddModal}
           currentMargin={currentMargin} />
 
-          <ViewRouter
-          view={view}
-          setView={setView}
-          theme={theme}
-          tStyle={tStyle}
-          isLight={isLight}
-          handleThemeChange={handleThemeChange}
-          ledger={ledger}
-          currentYear={currentYear}
-          currentMonth={currentMonth}
-          setCurrentMonth={setCurrentMonth}
-          setCurrentYear={setCurrentYear}
-          charts={charts}
-          activeMonthKey={activeMonthKey}
-          activeData={activeData}
-          activeGoals={activeGoals}
-          activeFood={activeFood}
-          setChartModal={setChartModal}
-          setDeleteChartModal={setDeleteChartModal}
-          openEditFood={openEditFood}
-          handleRemoveFood={handleRemoveFood}
-          openEditEntry={openEditEntry}
-          handleRemoveEntry={handleRemoveEntry}
-          openEditGoal={openEditGoal}
-          privacySettings={privacySettings}
-          setPrivacySettings={setPrivacySettings} />
+          <AppStateProvider
+          value={{
+            view,
+            setView,
+            theme,
+            tStyle,
+            isLight,
+            handleThemeChange,
+            ledger,
+            currentYear,
+            currentMonth,
+            setCurrentYear,
+            setCurrentMonth,
+            charts,
+            activeMonthKey,
+            activeData,
+            activeGoals,
+            activeFood,
+            setChartModal,
+            setDeleteChartModal,
+            openEditFood,
+            handleRemoveFood,
+            openEditEntry,
+            handleRemoveEntry,
+            openEditGoal,
+            privacySettings,
+            setPrivacySettings
+          }}>
+            <ViewRouter />
+          </AppStateProvider>
         </div>
 
         <AppModals

@@ -1,31 +1,15 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, ShoppingCart, Plus, Layers, Eye, EyeOff } from 'lucide-react';
-import type { ThemeType, GlobalLedger, ChartConfig, PrivacyMode } from '../types';
+import type { ThemeType, PrivacyMode, ChartConfig } from '../types';
 import { MONTH_NAMES } from '../config';
 import { getChartData } from '../utils/chartDataEngine';
 import { ChartWidget } from './dashboard/ChartWidget';
-
-interface DashboardProps {
-  theme: ThemeType;
-  tStyle: any;
-  isLight: boolean;
-  ledger: GlobalLedger;
-  currentYear: number;
-  currentMonth: number;
-  userCharts: ChartConfig[];
-  savingsPrivacy: PrivacyMode;
-  creditPrivacy: PrivacyMode;
-  onNavigateToCurrentMonth: () => void;
-  onNavigateToFood: () => void;
-  onNavigateToYear: () => void;
-  onAddChart: () => void;
-  onEditChart: (chart: ChartConfig) => void;
-  onDeleteChart: (id: string, title: string) => void;
-}
+import { getLabelFontFamily, getMonoFontFamily } from '../utils/themeUtils';
+import { useAppState } from '../context/AppStateContext';
 
 // --- NEW: Internal component to handle the blurring and hold-to-reveal interaction ---
-const PrivacyRow = ({ label, value, mode, tStyle, theme }: { label: string, value: number, mode: PrivacyMode, tStyle: any, theme: string }) => {
+const PrivacyRow = ({ label, value, mode, tStyle, theme }: { label: string, value: number, mode: PrivacyMode, tStyle: any, theme: ThemeType }) => {
   const [isRevealed, setIsRevealed] = useState(false);
 
   if (mode === 'off') return null;
@@ -34,7 +18,7 @@ const PrivacyRow = ({ label, value, mode, tStyle, theme }: { label: string, valu
 
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
-      <span style={{ fontSize: '11px', color: tStyle.colors.secondary, fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit' }}>
+      <span style={{ fontSize: '11px', color: tStyle.colors.secondary, fontFamily: getLabelFontFamily(theme) }}>
         {label}:
       </span>
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -42,7 +26,7 @@ const PrivacyRow = ({ label, value, mode, tStyle, theme }: { label: string, valu
           fontSize: '12px', 
           fontWeight: 'bold', 
           color: tStyle.colors.primary, 
-          fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit',
+          fontFamily: getLabelFontFamily(theme),
           filter: isBlurred ? 'blur(4px)' : 'none',
           transition: 'filter 0.2s ease',
           userSelect: 'none' // Prevents text highlighting when holding the button
@@ -51,6 +35,7 @@ const PrivacyRow = ({ label, value, mode, tStyle, theme }: { label: string, valu
         </span>
         {mode === 'blurred' && (
           <button
+            type="button"
             onPointerDown={() => setIsRevealed(true)}
             onPointerUp={() => setIsRevealed(false)}
             onPointerLeave={() => setIsRevealed(false)}
@@ -64,12 +49,22 @@ const PrivacyRow = ({ label, value, mode, tStyle, theme }: { label: string, valu
   );
 };
 
-export const Dashboard: React.FC<DashboardProps> = ({
-  theme, tStyle, isLight, ledger, currentYear, currentMonth, userCharts, savingsPrivacy, creditPrivacy,
-  onNavigateToCurrentMonth, onNavigateToFood, onNavigateToYear, onAddChart, onEditChart, onDeleteChart
-}) => {
+export const Dashboard: React.FC = () => {
+  const {
+    theme, tStyle, isLight, ledger, currentYear, currentMonth,
+    charts: userCharts, privacySettings, setView, setChartModal, setDeleteChartModal
+  } = useAppState();
+  const savingsPrivacy = privacySettings.savings;
+  const creditPrivacy = privacySettings.credit;
+  const onNavigateToCurrentMonth = () => setView('month');
+  const onNavigateToFood = () => setView('food');
+  const onNavigateToYear = () => setView('year');
+  const onAddChart = () => setChartModal({ isOpen: true, mode: 'add', id: null, title: '', type: 'bar', source: 'outflows', targetIds: [] });
+  const onEditChart = (chart: ChartConfig) => setChartModal({ isOpen: true, mode: 'edit', id: chart.id, title: chart.title, type: chart.type, source: chart.source, targetIds: chart.targetIds || [] });
+  const onDeleteChart = (id: string, title: string) => setDeleteChartModal({ isOpen: true, chartId: id, chartTitle: title });
+
   const [isEditMode, setIsEditMode] = useState(false);
-  const pressTimer = useRef<NodeJS.Timeout | null>(null);
+  const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   const currentMonthKey = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
   const activeMonthData = ledger[currentMonthKey];
@@ -108,20 +103,20 @@ export const Dashboard: React.FC<DashboardProps> = ({
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} onClick={() => { if (isEditMode) setIsEditMode(false); }} style={{ padding: '0 16px 24px 16px', display: 'flex', flexDirection: 'column', gap: '16px', height: '100%', overflowY: 'auto' }}>
       
-      <div style={{ fontSize: '11px', color: tStyle.colors.secondary, letterSpacing: '2px', fontWeight: 'bold', marginTop: '8px', borderBottom: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.1)', paddingBottom: '6px', fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit' }}>
+      <div style={{ fontSize: '11px', color: tStyle.colors.secondary, letterSpacing: '2px', fontWeight: 'bold', marginTop: '8px', borderBottom: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.1)', paddingBottom: '6px', fontFamily: getLabelFontFamily(theme) }}>
         QUICK ACCESS
       </div>
 
       <motion.div whileTap={{ scale: 0.98 }} onClick={onNavigateToYear} style={{ ...tStyle.row, padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', width: '100%', backgroundColor: isLight ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.03)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><Layers size={14} color={tStyle.colors.primary} /><span style={{ fontSize: '11px', fontWeight: 'bold', color: tStyle.colors.primary, letterSpacing: '1.5px', fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit' }}>View All Months</span></div>
-        <span style={{ fontSize: '9px', color: tStyle.colors.secondary, fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : (isLight ? 'inherit' : "'Share Tech Mono', monospace"), fontWeight: 'bold' }}>VIEW YEAR [{currentYear}] →</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><Layers size={14} color={tStyle.colors.primary} /><span style={{ fontSize: '11px', fontWeight: 'bold', color: tStyle.colors.primary, letterSpacing: '1.5px', fontFamily: getLabelFontFamily(theme) }}>View All Months</span></div>
+        <span style={{ fontSize: '9px', color: tStyle.colors.secondary, fontFamily: getMonoFontFamily(theme, isLight), fontWeight: 'bold' }}>VIEW YEAR [{currentYear}] →</span>
       </motion.div>
 
       <div style={{ display: 'flex', gap: '12px', width: '100%' }}>
        <div style={{ ...containerStyle, flex: 1 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <Calendar size={24} color={tStyle.colors.pos} style={{ opacity: 0.8 }} />
-            <div style={{ fontSize: '20px', fontWeight: 'bold', color: tStyle.colors.primary, fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit' }}>
+            <div style={{ fontSize: '20px', fontWeight: 'bold', color: tStyle.colors.primary, fontFamily: getLabelFontFamily(theme) }}>
               {MONTH_NAMES[new Date().getMonth()].slice(0,3)} '{String(currentYear).slice(-2)}
             </div>
           </div>
@@ -129,12 +124,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <div style={{ marginTop: '12px', borderTop: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.1)', paddingTop: '8px' }}>
             {/* The standard metrics */}
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-              <span style={{ fontSize: '11px', color: tStyle.colors.secondary, fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit' }}>Incoming:</span>
-              <span style={{ fontSize: '12px', fontWeight: 'bold', color: tStyle.colors.primary, fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit' }}>£{inflowTotal.toFixed(2)}</span>
+              <span style={{ fontSize: '11px', color: tStyle.colors.secondary, fontFamily: getLabelFontFamily(theme) }}>Incoming:</span>
+              <span style={{ fontSize: '12px', fontWeight: 'bold', color: tStyle.colors.primary, fontFamily: getLabelFontFamily(theme) }}>£{inflowTotal.toFixed(2)}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px' }}>
-              <span style={{ fontSize: '11px', color: tStyle.colors.secondary, fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit' }}>Outgoings:</span>
-              <span style={{ fontSize: '12px', fontWeight: 'bold', color: tStyle.colors.primary, fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit' }}>£{outflowTotal.toFixed(2)}</span>
+              <span style={{ fontSize: '11px', color: tStyle.colors.secondary, fontFamily: getLabelFontFamily(theme) }}>Outgoings:</span>
+              <span style={{ fontSize: '12px', fontWeight: 'bold', color: tStyle.colors.primary, fontFamily: getLabelFontFamily(theme) }}>£{outflowTotal.toFixed(2)}</span>
             </div>
             
             {/* The Private Metrics */}
@@ -149,7 +144,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             style={{ 
               fontSize: '10px', 
               color: tStyle.colors.secondary, 
-              fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : (isLight ? 'inherit' : "'Share Tech Mono', monospace"), 
+              fontFamily: getMonoFontFamily(theme, isLight), 
               marginTop: '12px', 
               backgroundColor: tStyle.colors.metricBg, 
               border: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.1)',
@@ -168,23 +163,23 @@ export const Dashboard: React.FC<DashboardProps> = ({
         <motion.div whileTap={{ scale: 0.96 }} onClick={onNavigateToFood} style={{ ...containerStyle, flex: 1, cursor: 'pointer', ...tStyle.bladeContainer({ color: tStyle.colors.neg }) }}>
           <ShoppingCart size={24} color={tStyle.colors.neg} style={{ opacity: 0.8 }} />
           <div style={{ marginTop: 'auto', paddingTop: '20px' }}>
-            <div style={{ fontSize: '10px', color: tStyle.colors.secondary, letterSpacing: '2px', fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit' }}>FOOD BUDGET</div>
-            <div style={{ fontSize: '24px', fontWeight: 'bold', color: tStyle.colors.primary, fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit' }}>£{foodTotal.toFixed(2)}</div>
+            <div style={{ fontSize: '10px', color: tStyle.colors.secondary, letterSpacing: '2px', fontFamily: getLabelFontFamily(theme) }}>FOOD BUDGET</div>
+            <div style={{ fontSize: '24px', fontWeight: 'bold', color: tStyle.colors.primary, fontFamily: getLabelFontFamily(theme) }}>£{foodTotal.toFixed(2)}</div>
           </div>
         </motion.div>
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', borderBottom: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.1)', paddingBottom: '6px' }}>
-        <div style={{ fontSize: '11px', color: tStyle.colors.secondary, letterSpacing: '2px', fontWeight: 'bold', fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit' }}>ANALYTICS VISUALIZATION</div>
-        {isEditMode ? <button onClick={() => setIsEditMode(false)} style={{ background: tStyle.colors.metricBg, border: `1px solid ${tStyle.colors.pos}`, padding: '4px 8px', borderRadius: '6px', cursor: 'pointer', color: tStyle.colors.pos, fontSize: '9px', fontWeight: 'bold', fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit' }}>DONE EDITING</button> : <button onClick={onAddChart} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', color: tStyle.colors.pos, fontSize: '9px', fontWeight: 'bold', fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit' }}><Plus size={12} strokeWidth={3} /> ADD CHART</button>}
+        <div style={{ fontSize: '11px', color: tStyle.colors.secondary, letterSpacing: '2px', fontWeight: 'bold', fontFamily: getLabelFontFamily(theme) }}>ANALYTICS VISUALIZATION</div>
+        {isEditMode ? <button onClick={() => setIsEditMode(false)} style={{ background: tStyle.colors.metricBg, border: `1px solid ${tStyle.colors.pos}`, padding: '4px 8px', borderRadius: '6px', cursor: 'pointer', color: tStyle.colors.pos, fontSize: '9px', fontWeight: 'bold', fontFamily: getLabelFontFamily(theme) }}>DONE EDITING</button> : <button onClick={onAddChart} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', color: tStyle.colors.pos, fontSize: '9px', fontWeight: 'bold', fontFamily: getLabelFontFamily(theme) }}><Plus size={12} strokeWidth={3} /> ADD CHART</button>}
       </div>
 
       {userCharts.length === 0 ? (
-        <div style={{ color: tStyle.colors.secondary, textAlign: 'center', marginTop: '10px', fontSize: '11px', fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit' }}>NO CHARTS CONFIGURED.</div>
+        <div style={{ color: tStyle.colors.secondary, textAlign: 'center', marginTop: '10px', fontSize: '11px', fontFamily: getLabelFontFamily(theme) }}>NO CHARTS CONFIGURED.</div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingBottom: '24px' }}>
           {userCharts.map((chart) => (
-            <ChartWidget key={chart.id} chart={chart} isEditMode={isEditMode} theme={theme} tStyle={tStyle} isLight={isLight} containerStyle={containerStyle} onPointerDown={handlePointerDown} cancelPress={cancelPress} onEdit={onEditChart} onDelete={onDeleteChart} pieBarData={getChartData(chart.source, activeMonthData, theme)} lineData={null} />
+            <ChartWidget key={chart.id} chart={chart} isEditMode={isEditMode} theme={theme} tStyle={tStyle} isLight={isLight} containerStyle={containerStyle} onPointerDown={handlePointerDown} cancelPress={cancelPress} onEdit={onEditChart} onDelete={onDeleteChart} pieBarData={getChartData(chart.source, activeMonthData, theme)} ledger={ledger} />
           ))}
         </div>
       )}

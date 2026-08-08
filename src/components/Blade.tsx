@@ -4,6 +4,7 @@ import type { ThemeType, Entry, Goal, BladeData } from '../types';
 import { TAB_HEIGHT } from '../config';
 import { EntryRow } from './EntryRow';
 import { GoalCard } from './GoalCard';
+import { isNothingTheme, getMonoFontFamily, getLabelFontFamily } from '../utils/themeUtils';
 
 interface BladeProps {
   config: any;
@@ -85,13 +86,9 @@ export const Blade: React.FC<BladeProps> = ({
           <span
             style={{
               fontSize: '14px',
-              color: theme.includes('nothing') ? tStyle.colors.secondary : '#fff',
-              textShadow: theme.includes('nothing') ? 'none' : '0 1px 3px rgba(0,0,0,0.6)',
-              fontFamily: theme.includes('nothing')
-                ? "'DotGothic16', sans-serif"
-                : isLight
-                  ? 'inherit'
-                  : "'Share Tech Mono', monospace",
+              color: isNothingTheme(theme) ? tStyle.colors.secondary : '#fff',
+              textShadow: isNothingTheme(theme) ? 'none' : '0 1px 3px rgba(0,0,0,0.6)',
+              fontFamily: getMonoFontFamily(theme, isLight),
               fontWeight: 700
             }}
           >
@@ -139,7 +136,7 @@ export const Blade: React.FC<BladeProps> = ({
                         marginTop: '12px',
                         borderBottom: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.1)',
                         paddingBottom: '6px',
-                        fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit'
+                        fontFamily: getLabelFontFamily(theme)
                       }}
                     >
                       FLUID OUTGOINGS

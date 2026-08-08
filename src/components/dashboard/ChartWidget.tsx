@@ -1,7 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { PieChart, BarChart2, Layers, X } from 'lucide-react';
-import type { ChartConfig, ThemeType } from '../../types';
+import type { ChartConfig, GlobalLedger, ThemeType } from '../../types';
+import { getLabelFontFamily } from '../../utils/themeUtils';
 import { CustomPieChart } from '../charts/CustomPieChart';
 import { CustomBarChart } from '../charts/CustomBarChart';
 import { CustomLineChart } from '../charts/CustomLineChart';
@@ -11,7 +12,7 @@ interface ChartWidgetProps {
   chart: ChartConfig;
   isEditMode: boolean;
   pieBarData: any;
-  lineData: any;
+  ledger: GlobalLedger;
   theme: ThemeType;
   tStyle: any;
   isLight: boolean;
@@ -22,7 +23,7 @@ interface ChartWidgetProps {
   onDelete: (id: string, title: string) => void;
 }
 
-export const ChartWidget: React.FC<ChartWidgetProps> = ({ chart, isEditMode, pieBarData, lineData, theme, tStyle, isLight, containerStyle, onPointerDown, cancelPress, onEdit, onDelete }) => {
+export const ChartWidget: React.FC<ChartWidgetProps> = ({ chart, isEditMode, pieBarData, ledger, theme, tStyle, isLight, containerStyle, onPointerDown, cancelPress, onEdit, onDelete }) => {
   return (
     <motion.div
       animate={isEditMode ? { rotate: [-0.5, 0.5, -0.5, 0.5, 0] } : { rotate: 0 }}
@@ -40,7 +41,7 @@ export const ChartWidget: React.FC<ChartWidgetProps> = ({ chart, isEditMode, pie
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', borderBottom: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px' }}>
         {chart.type === 'pie' ? <PieChart size={16} color={tStyle.colors.secondary} /> : chart.type === 'bar' ? <BarChart2 size={16} color={tStyle.colors.secondary} /> : <Layers size={16} color={tStyle.colors.secondary} />}
-        <span style={{ fontSize: '12px', fontWeight: 'bold', color: tStyle.colors.primary, fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit' }}>
+        <span style={{ fontSize: '12px', fontWeight: 'bold', color: tStyle.colors.primary, fontFamily: getLabelFontFamily(theme) }}>
           {chart.title.toUpperCase()}
         </span>
       </div>

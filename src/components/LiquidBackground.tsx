@@ -1,5 +1,6 @@
 import React from 'react';
 import type { ThemeType } from '../types';
+import { isNothingTheme } from '../utils/themeUtils';
 
 export const LiquidBackground = ({ theme }: { theme: ThemeType }) => {
   const getOrbColors = () => {
@@ -27,7 +28,7 @@ export const LiquidBackground = ({ theme }: { theme: ThemeType }) => {
   };
 
   const colors = getOrbColors();
-  const isNothing = theme.includes('nothing');
+  const isNothing = isNothingTheme(theme);
 
   return (
     <div

@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { db } from '../storage/database';
 import { WebAuthnAPI } from '../utils/webauthn';
+import { useLoadUsersEffect } from '../useEffects/useAuthEffects';
 import type { UserProfile, ThemeType, ChartConfig } from '../types';
 
 interface AuthContextType {
@@ -62,9 +63,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(DEV_USER);
   const [isAuthenticated, setIsAuthenticated] = useState(true);
 
-  useEffect(() => {
-    setUsers(db.getUsers());
-  }, []);
+  useLoadUsersEffect(setUsers);
 
   const loginWithPin = (userId: string, pin: string) => {
     const user = users[userId];

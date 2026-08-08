@@ -41,7 +41,7 @@ export type FoodEntry = {
   date: string;
 };
 
-export type BladeData = Record<string, Entry[]>;
+export type BladeData = { inflows: Entry[]; outflows: Entry[]; savings: Entry[]; debt: Entry[]; [key: string]: Entry[] };
 export type MonthlyLedger = { data: BladeData; goals: Goal[]; food: FoodEntry[] };
 export type GlobalLedger = Record<string, MonthlyLedger>;
 

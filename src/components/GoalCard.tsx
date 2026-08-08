@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pencil, Calendar, Target, Check, TrendingUp } from 'lucide-react';
 import type { Goal, Entry, ThemeType } from '../types';
+import { isNothingTheme, getLabelFontFamily } from '../utils/themeUtils';
 
 interface GoalCardProps {
   goal: Goal;
@@ -31,7 +32,7 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, config, savingsData, t
         display: 'flex',
         flexDirection: 'column',
         gap: '12px',
-        borderLeft: theme.includes('nothing') ? `2px dotted ${activeColor}` : `4px solid ${activeColor}`
+        borderLeft: isNothingTheme(theme) ? `2px dotted ${activeColor}` : `4px solid ${activeColor}`
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -46,7 +47,7 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, config, savingsData, t
               gap: '6px',
               marginTop: '4px',
               fontWeight: isLight ? 600 : 'normal',
-              fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit'
+              fontFamily: getLabelFontFamily(theme)
             }}
           >
             <Calendar size={12} /> Target: {goal.targetDate}
@@ -85,7 +86,7 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, config, savingsData, t
             alignItems: 'center',
             gap: '6px',
             color: tStyle.colors.secondary,
-            fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : isLight ? 'inherit' : 'monospace',
+            fontFamily: isNothingTheme(theme) ? "'DotGothic16', sans-serif" : isLight ? 'inherit' : 'monospace',
             fontWeight: isLight ? 600 : 'normal'
           }}
         >
@@ -98,7 +99,7 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, config, savingsData, t
             alignItems: 'center',
             gap: '6px',
             color: tStyle.colors.secondary,
-            fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : isLight ? 'inherit' : 'monospace',
+            fontFamily: isNothingTheme(theme) ? "'DotGothic16', sans-serif" : isLight ? 'inherit' : 'monospace',
             fontWeight: isLight ? 600 : 'normal'
           }}
         >
@@ -111,7 +112,7 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, config, savingsData, t
             alignItems: 'center',
             gap: '6px',
             color: tStyle.colors.secondary,
-            fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : isLight ? 'inherit' : 'monospace',
+            fontFamily: isNothingTheme(theme) ? "'DotGothic16', sans-serif" : isLight ? 'inherit' : 'monospace',
             fontWeight: isLight ? 600 : 'normal'
           }}
         >

@@ -1,63 +1,25 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { Pencil, X, MapPin, CreditCard, Banknote } from 'lucide-react';
-import type { ThemeType, FoodEntry } from '../types';
+import { useAppState } from '../context/AppStateContext';
+import { useMonthPagination } from '../hooks/useMonthPagination';
+import { getLabelFontFamily, getMonoFontFamily } from '../utils/themeUtils';
 
-interface FoodViewProps {
-  foodEntries: FoodEntry[];
-  theme: ThemeType;
-  tStyle: any;
-  isLight: boolean;
-  onEdit: (entry: FoodEntry) => void;
-  onRemove: (id: string) => void;
-  // --- NEW PROPS REQUIRED FOR SWIPE PAGINATION ---
-  currentMonth: number;
-  currentYear: number;
-  setCurrentMonth: (m: number) => void;
-  setCurrentYear: (y: number) => void;
-  activeMonthKey: string;
-}
-
-export const FoodView: React.FC<FoodViewProps> = ({ 
-  foodEntries, 
-  theme, 
-  tStyle, 
-  isLight, 
-  onEdit, 
-  onRemove,
-  currentMonth,
-  currentYear,
-  setCurrentMonth,
-  setCurrentYear,
-  activeMonthKey
-}) => {
-  const [swipeDirection, setSwipeDirection] = useState(0);
-
-  const paginateMonth = (newDirection: number) => {
-    setSwipeDirection(newDirection);
-    let nextMonth = currentMonth + newDirection;
-    let nextYear = currentYear;
-    
-    if (nextMonth > 12) { 
-      nextMonth = 1; 
-      nextYear += 1; 
-    } else if (nextMonth < 1) { 
-      nextMonth = 12; 
-      nextYear -= 1; 
-    }
-    
-    setCurrentMonth(nextMonth);
-    setCurrentYear(nextYear);
-  };
-
-  const swipeConfidenceThreshold = 10000;
-  const swipePower = (offset: number, velocity: number) => Math.abs(offset) * velocity;
-  
-  const swipeVariants = { 
-    enter: (d: number) => ({ x: d > 0 ? 300 : -300, opacity: 0 }), 
-    center: { zIndex: 1, x: 0, opacity: 1 }, 
-    exit: (d: number) => ({ zIndex: 0, x: d < 0 ? 300 : -300, opacity: 0 }) 
-  };
+export const FoodView: React.FC = () => {
+  const {
+    activeFood: foodEntries,
+    theme,
+    tStyle,
+    isLight,
+    openEditFood: onEdit,
+    handleRemoveFood: onRemove,
+    currentMonth,
+    currentYear,
+    setCurrentMonth,
+    setCurrentYear,
+    activeMonthKey
+  } = useAppState();
+  const { swipeDirection, swipeVariants, handleDragEnd } = useMonthPagination(currentMonth, currentYear, setCurrentMonth, setCurrentYear);
 
   return (
     <motion.div
@@ -71,11 +33,7 @@ export const FoodView: React.FC<FoodViewProps> = ({
       drag="x"
       dragConstraints={{ left: 0, right: 0 }}
       dragElastic={1}
-      onDragEnd={(e, { offset, velocity }) => {
-        const swipe = swipePower(offset.x, velocity.x);
-        if (swipe < -swipeConfidenceThreshold) paginateMonth(1);
-        else if (swipe > swipeConfidenceThreshold) paginateMonth(-1);
-      }}
+      onDragEnd={handleDragEnd}
       style={{
         padding: '0 16px 20px 16px',
         display: 'flex',
@@ -96,7 +54,7 @@ export const FoodView: React.FC<FoodViewProps> = ({
             marginTop: '30px',
             fontSize: '11px',
             letterSpacing: '1px',
-            fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit'
+            fontFamily: getLabelFontFamily(theme)
           }}
         >
           NO FOOD ENTRIES THIS MONTH.
@@ -130,7 +88,7 @@ export const FoodView: React.FC<FoodViewProps> = ({
                       fontSize: '15px',
                       fontWeight: 'bold',
                       color: tStyle.colors.primary,
-                      fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit'
+                      fontFamily: getLabelFontFamily(theme)
                     }}
                   >
                     {entry.item}
@@ -140,11 +98,7 @@ export const FoodView: React.FC<FoodViewProps> = ({
                       fontSize: '15px',
                       fontWeight: 'bold',
                       color: tStyle.colors.primary,
-                      fontFamily: theme.includes('nothing')
-                        ? "'DotGothic16', sans-serif"
-                        : isLight
-                          ? 'inherit'
-                          : "'Share Tech Mono', monospace"
+                      fontFamily: getMonoFontFamily(theme, isLight)
                     }}
                   >
                     £{entry.price.toFixed(2)}
@@ -158,7 +112,7 @@ export const FoodView: React.FC<FoodViewProps> = ({
                     letterSpacing: '1px',
                     marginBottom: '8px',
                     fontWeight: 'bold',
-                    fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit'
+                    fontFamily: getLabelFontFamily(theme)
                   }}
                 >
                   {entry.category.toUpperCase()}
@@ -170,11 +124,7 @@ export const FoodView: React.FC<FoodViewProps> = ({
                     gap: '12px',
                     fontSize: '10px',
                     color: tStyle.colors.secondary,
-                    fontFamily: theme.includes('nothing')
-                      ? "'DotGothic16', sans-serif"
-                      : isLight
-                        ? 'inherit'
-                        : "'Share Tech Mono', monospace",
+                    fontFamily: getMonoFontFamily(theme, isLight),
                     fontWeight: isLight ? 600 : 'normal'
                   }}
                 >
@@ -199,10 +149,11 @@ export const FoodView: React.FC<FoodViewProps> = ({
                 </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginLeft: '12px' }}>
-                <button style={{ background: 'none', border: 'none', cursor: 'pointer' }} onClick={() => onEdit(entry)}>
+                <button type="button" style={{ background: 'none', border: 'none', cursor: 'pointer' }} onClick={() => onEdit(entry)}>
                   <Pencil size={15} color={tStyle.colors.secondary} />
                 </button>
                 <button
+                  type="button"
                   style={{ background: 'none', border: 'none', cursor: 'pointer' }}
                   onClick={() => onRemove(entry.id)}
                 >

@@ -2,17 +2,9 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Fingerprint, LogOut, Trash2, ShieldCheck, ShieldAlert, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import type { ThemeType, PrivacyMode, PrivacySettings } from '../types';
-
-interface SettingsViewProps {
-  theme: ThemeType;
-  tStyle: any;
-  isLight: boolean;
-  onThemeSelect: (newTheme: ThemeType) => void;
-  // NEW: Privacy Props
-  privacy: PrivacySettings;
-  setPrivacy: (p: PrivacySettings) => void;
-}
+import { useAppState } from '../context/AppStateContext';
+import type { ThemeType, PrivacyMode } from '../types';
+import { getLabelFontFamily, getContrastTextColor } from '../utils/themeUtils';
 
 const AVAILABLE_THEMES: { id: ThemeType; label: string }[] = [
   { id: 'aero_g3', label: 'AERO GLASS G3' },
@@ -23,7 +15,8 @@ const AVAILABLE_THEMES: { id: ThemeType; label: string }[] = [
   { id: 'softtech', label: 'SOFT INDUSTRIAL' }
 ];
 
-export const SettingsView: React.FC<SettingsViewProps> = ({ theme, tStyle, isLight, onThemeSelect, privacy, setPrivacy }) => {
+export const SettingsView: React.FC = () => {
+  const { theme, tStyle, isLight, handleThemeChange: onThemeSelect, privacySettings: privacy, setPrivacySettings: setPrivacy } = useAppState();
   const { currentUser, logout, deleteAccount, enrollBiometrics, removeBiometrics } = useAuth();
   const [fidoStatus, setFidoStatus] = useState<string>('');
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -51,12 +44,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ theme, tStyle, isLig
     color: tStyle.colors.secondary,
     letterSpacing: '1px',
     fontWeight: 700,
-    fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit'
+    fontFamily: getLabelFontFamily(theme)
   };
   
   const buttonStyle = {
     backgroundColor: tStyle.colors.pos,
-    color: theme.includes('nothing') ? '#000' : '#fff',
+    color: getContrastTextColor(theme),
     border: 'none',
     padding: '14px',
     borderRadius: '8px',
@@ -64,7 +57,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ theme, tStyle, isLig
     fontWeight: 'bold',
     letterSpacing: '1px',
     cursor: 'pointer',
-    fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit',
+    fontFamily: getLabelFontFamily(theme),
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -80,7 +73,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ theme, tStyle, isLig
     fontSize: '12px',
     outline: 'none',
     width: '100%',
-    fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit',
+    fontFamily: getLabelFontFamily(theme),
   };
 
   return (
@@ -98,13 +91,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ theme, tStyle, isLig
       }}
     >
       {/* USER PROFILE DECK */}
-      <div style={{ fontSize: '11px', color: tStyle.colors.secondary, letterSpacing: '2px', fontWeight: 'bold', marginTop: '8px', borderBottom: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.1)', paddingBottom: '6px', fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit' }}>
+      <div style={{ fontSize: '11px', color: tStyle.colors.secondary, letterSpacing: '2px', fontWeight: 'bold', marginTop: '8px', borderBottom: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.1)', paddingBottom: '6px', fontFamily: getLabelFontFamily(theme) }}>
         USER PROFILE
       </div>
       <div style={boxStyle}>
         <div>
           <label style={labelStyle as any}>DESIGNATION</label>
-          <div style={{ fontSize: '18px', fontWeight: 'bold', color: tStyle.colors.primary, fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit' }}>
+          <div style={{ fontSize: '18px', fontWeight: 'bold', color: tStyle.colors.primary, fontFamily: getLabelFontFamily(theme) }}>
             {currentUser.name.toUpperCase()}
           </div>
         </div>
@@ -138,7 +131,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ theme, tStyle, isLig
       </div>
 
       {/* THEMES MANAGEMENT PLUG */}
-      <div style={{ fontSize: '11px', color: tStyle.colors.secondary, letterSpacing: '2px', fontWeight: 'bold', marginTop: '16px', borderBottom: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.1)', paddingBottom: '6px', fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit' }}>
+      <div style={{ fontSize: '11px', color: tStyle.colors.secondary, letterSpacing: '2px', fontWeight: 'bold', marginTop: '16px', borderBottom: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.1)', paddingBottom: '6px', fontFamily: getLabelFontFamily(theme) }}>
         VISUAL CORE THEME
       </div>
       <div style={boxStyle}>
@@ -155,7 +148,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ theme, tStyle, isLig
                   border: isSelected ? `2px solid ${tStyle.colors.pos}` : `1px solid ${tStyle.colors.secondary}33`,
                   backgroundColor: isSelected ? `${tStyle.colors.pos}15` : tStyle.colors.metricBg,
                   color: isSelected ? tStyle.colors.pos : tStyle.colors.primary,
-                  fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit',
+                  fontFamily: getLabelFontFamily(theme),
                   fontSize: '10px',
                   fontWeight: 'bold',
                   letterSpacing: '0.5px',
@@ -171,7 +164,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ theme, tStyle, isLig
       </div>
 
       {/* NEW: DASHBOARD PRIVACY PLUG */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', color: tStyle.colors.secondary, letterSpacing: '2px', fontWeight: 'bold', marginTop: '16px', borderBottom: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.1)', paddingBottom: '6px', fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', color: tStyle.colors.secondary, letterSpacing: '2px', fontWeight: 'bold', marginTop: '16px', borderBottom: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.1)', paddingBottom: '6px', fontFamily: getLabelFontFamily(theme) }}>
         <EyeOff size={14} /> DASHBOARD PRIVACY
       </div>
       <div style={boxStyle}>
@@ -195,7 +188,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ theme, tStyle, isLig
       </div>
 
       {/* SECURE BIOMETRICS LINK */}
-      <div style={{ fontSize: '11px', color: tStyle.colors.secondary, letterSpacing: '2px', fontWeight: 'bold', marginTop: '16px', borderBottom: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.1)', paddingBottom: '6px', fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit' }}>
+      <div style={{ fontSize: '11px', color: tStyle.colors.secondary, letterSpacing: '2px', fontWeight: 'bold', marginTop: '16px', borderBottom: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.1)', paddingBottom: '6px', fontFamily: getLabelFontFamily(theme) }}>
         SIGN-IN OPTIONS (FIDO2)
       </div>
       <div style={boxStyle}>
@@ -206,10 +199,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ theme, tStyle, isLig
             <ShieldAlert size={24} color={tStyle.colors.secondary} />
           )}
           <div>
-            <div style={{ fontSize: '14px', fontWeight: 'bold', color: tStyle.colors.primary, fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit' }}>
+            <div style={{ fontSize: '14px', fontWeight: 'bold', color: tStyle.colors.primary, fontFamily: getLabelFontFamily(theme) }}>
               BIOMETRIC AUTHENTICATION
             </div>
-            <div style={{ fontSize: '10px', color: tStyle.colors.secondary, fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit' }}>
+            <div style={{ fontSize: '10px', color: tStyle.colors.secondary, fontFamily: getLabelFontFamily(theme) }}>
               {currentUser.fidoCredential ? 'ACTIVE AND SECURED' : 'NOT CONFIGURED'}
             </div>
           </div>
@@ -225,7 +218,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ theme, tStyle, isLig
           </button>
         )}
         {fidoStatus && (
-          <div style={{ fontSize: '10px', color: tStyle.colors.pos, textAlign: 'center', marginTop: '4px', fontFamily: theme.includes('nothing') ? "'DotGothic16', sans-serif" : 'inherit' }}>
+          <div style={{ fontSize: '10px', color: tStyle.colors.pos, textAlign: 'center', marginTop: '4px', fontFamily: getLabelFontFamily(theme) }}>
             {fidoStatus}
           </div>
         )}
