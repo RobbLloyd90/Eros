@@ -1,8 +1,15 @@
 export const GlobalStyles = () => (
   <style>
     {`
-      @import url('https://fonts.googleapis.com/css2?family=Play:wght@400;700&family=Share+Tech+Mono&family=Orbitron:wght@700&family=Inter:wght@400;600;700&family=Quicksand:wght@500;700;800&family=DotGothic16&display=swap');
-      
+      /* Self-hosted (no CDN) so the app fully works offline once installed */
+      @font-face { font-family: 'Play'; font-style: normal; font-weight: 400; font-display: swap; src: url('/fonts/play-400.woff2') format('woff2'); }
+      @font-face { font-family: 'Play'; font-style: normal; font-weight: 700; font-display: swap; src: url('/fonts/play-700.woff2') format('woff2'); }
+      @font-face { font-family: 'Share Tech Mono'; font-style: normal; font-weight: 400; font-display: swap; src: url('/fonts/sharetechmono-400.woff2') format('woff2'); }
+      @font-face { font-family: 'Orbitron'; font-style: normal; font-weight: 700; font-display: swap; src: url('/fonts/orbitron-700.woff2') format('woff2'); }
+      @font-face { font-family: 'Inter'; font-style: normal; font-weight: 400 700; font-display: swap; src: url('/fonts/inter-variable.woff2') format('woff2'); }
+      @font-face { font-family: 'Quicksand'; font-style: normal; font-weight: 500 700; font-display: swap; src: url('/fonts/quicksand-variable.woff2') format('woff2'); }
+      @font-face { font-family: 'DotGothic16'; font-style: normal; font-weight: 400; font-display: swap; src: url('/fonts/dotgothic16-400.woff2') format('woff2'); }
+
       * { box-sizing: border-box; }
       
       ::-webkit-scrollbar { width: 4px; height: 4px; }

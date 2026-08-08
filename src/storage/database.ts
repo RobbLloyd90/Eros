@@ -16,9 +16,10 @@ export const db = {
     users[user.id] = user;
     localStorage.setItem(USERS_KEY, JSON.stringify(users));
 
-    // If it's a new user, initialize an empty ledger for them
+    // If it's a new user, initialize their ledger. Demo starter data is dev-only convenience;
+    // production/Android builds always give new accounts a genuinely empty ledger.
     if (!localStorage.getItem(`${LEDGER_PREFIX}${user.id}`)) {
-      db.saveLedger(user.id, INITIAL_LEDGER); // Give them the starter data
+      db.saveLedger(user.id, import.meta.env.DEV ? INITIAL_LEDGER : {});
     }
   },
 

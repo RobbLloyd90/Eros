@@ -32,7 +32,7 @@ const DEV_USER: UserProfile = {
 };
 
 const existingData = db.getLedger(DEV_USER.id);
-if (!existingData || Object.keys(existingData).length === 0) {
+if (import.meta.env.DEV && (!existingData || Object.keys(existingData).length === 0)) {
   db.saveLedger(DEV_USER.id, {
     '2026-05': {
       data: {
@@ -60,8 +60,9 @@ if (!existingData || Object.keys(existingData).length === 0) {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [users, setUsers] = useState<Record<string, UserProfile>>({});
-  const [currentUser, setCurrentUser] = useState<UserProfile | null>(DEV_USER);
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  // Dev-only auto-login convenience; production/Android builds always start at the real lock screen.
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(import.meta.env.DEV ? DEV_USER : null);
+  const [isAuthenticated, setIsAuthenticated] = useState(import.meta.env.DEV);
 
   useLoadUsersEffect(setUsers);
 
