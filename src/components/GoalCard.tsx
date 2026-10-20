@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Pencil, X, Calendar, Target, Check, TrendingUp } from 'lucide-react';
 import type { Goal, SavingsEntry, ThemeType } from '../types';
 import { isNothingTheme, getLabelFontFamily } from '../utils/themeUtils';
@@ -15,11 +15,13 @@ interface GoalCardProps {
 }
 
 export const GoalCard: React.FC<GoalCardProps> = ({ goal, config, savingsData, theme, tStyle, isLight, onEdit, onRemove }) => {
-  const currentlySaved = goal.linkedSavings.reduce((sum, sId) => {
-    const s = savingsData.find((s) => s.id === sId);
-    if (!s) return sum;
-    return sum + (s.currentBalance || 0) + (s.contribution || 0) + (s.interestEarned || 0);
-  }, 0);
+  const currentlySaved = useMemo(() => {
+    return goal.linkedSavings.reduce((sum, sId) => {
+      const s = savingsData.find((s) => s.id === sId);
+      if (!s) return sum;
+      return sum + (s.currentBalance || 0) + (s.contribution || 0) + (s.interestEarned || 0);
+    }, 0);
+  }, [goal.linkedSavings, savingsData]);
 
   const amountLeft = Math.max(0, goal.targetAmount - currentlySaved);
   const percent = Math.min(100, (currentlySaved / goal.targetAmount) * 100) || 0;
