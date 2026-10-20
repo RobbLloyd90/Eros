@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, ShoppingCart, Plus, Layers, Eye, EyeOff } from 'lucide-react';
 import type { ThemeType, PrivacyMode, ChartConfig } from '../types';
@@ -66,26 +66,25 @@ export const Dashboard: React.FC = () => {
   const currentMonthKey = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
   const activeMonthData = ledger[currentMonthKey];
 
-  let foodTotal = 0;
-  let inflowTotal = 0;
-  let outflowTotal = 0;
-  let savingsTotal = 0;
-  let debtTotal = 0;
+  const { foodTotal, inflowTotal, outflowTotal, savingsTotal, debtTotal } = useMemo(() => {
+    if (!activeMonthData) {
+      return { foodTotal: 0, inflowTotal: 0, outflowTotal: 0, savingsTotal: 0, debtTotal: 0 };
+    }
+    // 1. Safely calculate food total, enforcing Number types
+    const food = (activeMonthData.food || []).reduce((sum, f) => sum + (Number(f.price) || 0), 0);
 
-  if (activeMonthData) {
-  // 1. Safely calculate food total, enforcing Number types
-    foodTotal = (activeMonthData.food || []).reduce((sum, f) => sum + (Number(f.price) || 0), 0);
-    
     // 2. Use optional chaining (?.) to prevent crashes if 'data' is missing
-    inflowTotal = (activeMonthData.data?.inflows || []).reduce((sum, e) => sum + (Number(e.actual) || 0), 0);
-    
+    const inflow = (activeMonthData.data?.inflows || []).reduce((sum, e) => sum + (Number(e.actual) || 0), 0);
+
     // 3. CRITICAL FIX: Add the Food Total to the Outgoings metric so the Dashboard is accurate!
     const standardOutflows = (activeMonthData.data?.outflows || []).reduce((sum, e) => sum + (Number(e.actual) || 0), 0);
-    outflowTotal = standardOutflows + foodTotal; 
-    
-    savingsTotal = (activeMonthData.data?.savings || []).reduce((sum, s) => sum + (Number(s.contribution) || 0), 0);
-    debtTotal = (activeMonthData.data?.debt || []).reduce((sum, d) => sum + (Number(d.actualPayment) || 0), 0);
-  } 
+    const outflow = standardOutflows + food;
+
+    const savings = (activeMonthData.data?.savings || []).reduce((sum, s) => sum + (Number(s.contribution) || 0), 0);
+    const debt = (activeMonthData.data?.debt || []).reduce((sum, d) => sum + (Number(d.actualPayment) || 0), 0);
+
+    return { foodTotal: food, inflowTotal: inflow, outflowTotal: outflow, savingsTotal: savings, debtTotal: debt };
+  }, [activeMonthData]);
   const containerStyle = {
     ...tStyle.bladeContainer({ color: tStyle.colors.pos }),
     display: 'flex', flexDirection: 'column' as const, justifyContent: 'space-between', padding: '16px',
